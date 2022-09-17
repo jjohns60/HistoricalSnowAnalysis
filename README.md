@@ -1,6 +1,6 @@
-# Sample Project
+# Historical Snow Analysis
 
-This is as an example on how teams can structure their project repositories. Thanks to Lindsey Heagey and Joachim Meyer for the template!
+This project deals with analyzing and downloading snow data
 
 ## Files
 
