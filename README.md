@@ -1,6 +1,6 @@
 # Historical Snow Analysis
 
-This project deals with analyzing and downloading snow data
+This project deals with analyzing and downloading snow data [need to update]
 
 ## Files
 
