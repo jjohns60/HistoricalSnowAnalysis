@@ -14,14 +14,14 @@ OUT_PATH = '/Users/jjohns/Desktop/MODIS_REGRID/PROCESSED/'; %this is where the p
 HTTPS_PATH = 'https://n5eil01u.ecs.nsidc.org/MOST/MOD10A1F.061/';
 %DATASET_ID = 'VNP10A1F'; %specific file identifier (at beginning of each file)
 DATASET_ID = 'MOD10A1F';
-FILE_EXT = 'hdf'; %file suffix, or file type extension
+FILE_EXT = 'hdf'; %file suffix, or file type extensio
 %VAR_PATH = '/HDFEOS/GRIDS/NPP_Grid_IMG_2D/Data Fields/CGF_NDSI_Snow_Cover'; %specify the variable of interest
 VAR_PATH = 'CGF_NDSI_Snow_Cover';
 BOUND_10deg_PATH = '/Users/jjohns/Documents/MATLAB/SCA_Regrid/sn_bound_10deg.txt'; %indicates the bounding coordinates of each tile in the global sinusoidal grid
 
 %(3) specify start and end dates to process
-START_DATE = datetime(2011,1,1);
-END_DATE = datetime(2012,12,31); 
+START_DATE = datetime(2022,1,1);
+END_DATE = datetime(2022,1,31); 
 
 %(4) specify target resolution/grid size in degrees
 TARGET_RES = 0.01; %approximately ~1 km
