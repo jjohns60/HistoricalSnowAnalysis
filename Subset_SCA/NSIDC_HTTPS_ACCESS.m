@@ -18,6 +18,9 @@ username = 'jjohns60';
 password = '2080Bent!';
 options = weboptions('HeaderFields',{'Authorization',...
     ['Basic ' matlab.net.base64encode([username ':' password])]});
+%options = weboptions;
+%options.Username = username;
+%options.Password = password;
 options.Timeout = 30;
 
 %Get list of all filenames meeting conditions (1st two string arguments are
