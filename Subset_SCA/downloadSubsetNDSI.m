@@ -21,8 +21,9 @@ function downloadSubsetNDSI(out_path,dataset_id,bounds,start_date,end_date,inter
 %   
 %   dataset_id: Specify the snow cover dataset to pull from, currently,
 %       this can be (1) 'MOD10A1F' (MODIS Terra 500m Cloud Gap Filled Snow
-%       Cover; 2000-present) or (2) 'VNP10A1F' (VIIRS 350m Cloud Gap Filled
-%       Snow Cover; 2014-present)
+%       Cover; 2000-present), (2) 'VNP10A1F' (VIIRS 350m Cloud Gap Filled
+%       Snow Cover; 2014-present), or (3) 'MYD10A1F' (MODIS Aqua 500m Cloud
+%       Gap Filled Snow Cover; 2002-present)
 %
 %   bounds: Either an input grid in the form [lat_min lat_max lon_min
 %       lon_max target_resolution] where all inputs are in degrees, an 
@@ -41,6 +42,14 @@ function downloadSubsetNDSI(out_path,dataset_id,bounds,start_date,end_date,inter
 %   'cubic' (cubic), and 'v4' (very slow, MATLAB Biharmonic spline). This 
 %   input is optional, with the default being 'natural'
 %
+%
+%   Note: nearest returns uniquely shaped pixels due to use of Euclidean
+%   distance, thus the pixels are oblong and not returned as squares
+%   representative of the true coverage area. Either 'linear' or 'natural'
+%   interpolation is recommended, or, use 'nearest' and be sure to
+%   approximately match the output pixel size with the true product
+%   resolution (i.e., 500m, 1 km etc..)
+%
 %   OUTPUT:
 %
 %   Files will be downloaded to the specified path (then deleted) and
@@ -58,6 +67,10 @@ end
 %determine which datapath and variables to use
 if strcmp(dataset_id,'MOD10A1F')
     HTTPS_PATH = 'https://n5eil01u.ecs.nsidc.org/MOST/MOD10A1F.061/';
+    FILE_EXT = 'hdf'; %file suffix, or file type extension
+    VAR_PATH = 'CGF_NDSI_Snow_Cover';
+elseif strcmp(dataset_id,'MYD10A1F')
+    HTTPS_PATH = 'https://n5eil01u.ecs.nsidc.org/MOSA/MYD10A1F.061/';
     FILE_EXT = 'hdf'; %file suffix, or file type extension
     VAR_PATH = 'CGF_NDSI_Snow_Cover';
 elseif strcmp(dataset_id,'VNP10A1F')
@@ -188,14 +201,9 @@ for i = 1:length(DATES)
         pause(rand*3)
         NSIDC_HTTPS_ACCESS(HTTPS_PATH,date,{dataset_id FILE_EXT tiles{:}},out_path);
     end
-    
 
     %Loop through temporary downloaded files in data folder
-    if contains(dataset_id,'VNP')
-        files = dir([out_path '*.h5']);
-    elseif contains(dataset_id,'MOD')
-        files = dir([out_path '*.hdf']);
-    end    
+    files = dir([out_path '*.' FILE_EXT]);   
     files = {files.name}';
 
     %ensure files are from correct date
@@ -222,7 +230,7 @@ for i = 1:length(DATES)
         try %files may be corrupted or unreadable (rare)
             if contains(dataset_id,'VNP')
                 D = h5read([out_path file],VAR_PATH);
-            elseif contains(dataset_id,'MOD')
+            elseif contains(dataset_id,'MOD') || contains(dataset_id,'MYD')
                 D = hdfread([out_path file],VAR_PATH);
             end    
         catch %if file is unreadable, use previous file and replace with all fill values
