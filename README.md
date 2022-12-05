@@ -1,6 +1,6 @@
 # Historical Snow Analysis
 
-This project deals with analyzing and downloading snow data for creating climate-scale insights into global snow regimes. These scripts have been developed by Jeremy Johnston (jeremy.johnston@unh.edu) at the University of New Hampshire Earth Systems Research Center (ESRC). Please reach out to Jeremy with questions on usage or troubleshooting. WHEN COMPANION PAPER IS PUBLISHED, ADD LINK/DOI HERE.
+This project deals with analyzing and downloading snow data for creating climate-scale insights into global snow regimes. These scripts have been developed by Jeremy Johnston (jeremy.johnston[at]unh.edu) at the University of New Hampshire Earth Systems Research Center (ESRC). Please reach out to Jeremy with questions on usage or troubleshooting. WHEN COMPANION PAPER IS PUBLISHED, ADD LINK/DOI HERE.
 
 ## Folders & Files
 
