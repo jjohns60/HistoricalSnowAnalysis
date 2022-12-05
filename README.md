@@ -10,7 +10,7 @@ This project deals with analyzing and downloading snow data for creating climate
 <br> MATLAB function fo extracting Global Historical Climatology Network observations from any site (or region) globally.
 * `Regrid_Global_SCA`
 <br> MATLAB codes for converting tiled MODIS or VIIRS snow cover data (NDSI) to high-resolution global grids.
-* 'Subset_SCA'
+* `Subset_SCA`
 <br> MATLAB codes for extracting, interpolation, and re-gridding region specific NDSI observations from VIIRS or MODIS.
 
 ## Relevant Data Links and Sources
