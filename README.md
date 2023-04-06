@@ -6,14 +6,15 @@ A companion paper 'Global Snow Seasonality Regimes from Satellite Records of Sno
 
 ## Folders & Files
 
+* `Regrid_Global_SCA`
+<br> MATLAB codes for converting tiled MODIS or VIIRS snow cover data (NDSI) to high-resolution, gap-filled global snow cover grids.
 * `Analysis_Functions`
 <br> MATLAB functions for deriving snow metrics from long term gridded data sets.
-* `Download_Historical_Point_Observations`
-<br> MATLAB function fo extracting Global Historical Climatology Network (GHCN) observations from any site (or region) globally.
-* `Regrid_Global_SCA`
-<br> MATLAB codes for converting tiled MODIS or VIIRS snow cover data (NDSI) to high-resolution global grids.
 * `Subset_SCA`
 <br> MATLAB codes for extracting, interpolating, and re-gridding region specific NDSI observations from VIIRS or MODIS.
+* `Download_Historical_Point_Observations`
+<br> MATLAB function fo extracting Global Historical Climatology Network (GHCN) observations from any site (or region) globally.
+
 
 ## Relevant Data Links and Sources
 
