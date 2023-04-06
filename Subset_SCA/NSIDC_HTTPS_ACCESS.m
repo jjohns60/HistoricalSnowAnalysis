@@ -1,21 +1,20 @@
-function NSIDC_HTTPS_ACCESS(HTTPS_PATH,date,str_array,savepath)
+function NSIDC_HTTPS_ACCESS(HTTPS_PATH,username,password,date,str_array,savepath)
 %NSIDC_HTTPS_ACCESS Takes an input path to a particular dataset on the
 %NSIDC server,a target datetime day, and a file search string array used to
 %indicate the dataset type and the file type of interest. Files will be 
 %stored at the directory indicated by 'savepath'
-
-%{
-%testing
-HTTPS_PATH = 'https://n5eil01u.ecs.nsidc.org/VIIRS/VNP10A1F.001/';
-date = datetime(2012,2,15);
-str_array = {'VNP10A1F','h5'};
-savepath = '/Volumes/GRA_Data_Backup/UNH Postdoc/VIIRS Cloud Filled/';
-%}
+%
+%
+% INPUTS:
+%   HTTPS_PATH - path to dataset (i.e., 'https://n5eil01u.ecs.nsidc.org/VIIRS/VNP10A1F.001/')
+%   username - NSIDC login username as string, 'username'
+%   password - NSIDC login password as string, 'password'
+%   date - date of interest (to download)
+%   str_array - cell array of strings to match to file names, allows download of only file types of interest (i.e., {'VNP10A1F','h5'})
+%   savepath - location of which to save the downloaded files locally
 
 
 %set permissions by updating options and headerfields
-username = 'jjohns60';
-password = '2080Bent!';
 options = weboptions('HeaderFields',{'Authorization',...
     ['Basic ' matlab.net.base64encode([username ':' password])]});
 %options = weboptions;
