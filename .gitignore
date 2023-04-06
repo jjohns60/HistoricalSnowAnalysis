@@ -1,3 +1,17 @@
+# MATLAB autosave files
+*.asv
+
+# Distribution / packaging
+.DS_Store
+
+# Data files
+*.h5
+*.hdf
+*.hdf5
+*.nc
+*.tif
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -6,7 +20,7 @@ __pycache__/
 # C extensions
 *.so
 
-# Distribution / packaging
+
 .Python
 build/
 develop-eggs/
@@ -14,7 +28,6 @@ dist/
 downloads/
 eggs/
 .eggs/
-.DS_Store
 lib/
 lib64/
 parts/
@@ -103,10 +116,3 @@ venv.bak/
 
 # mypy
 .mypy_cache/
-
-# Data files
-*.h5
-*.hdf
-*.hdf5
-*.nc
-*.tif
