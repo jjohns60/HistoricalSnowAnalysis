@@ -198,7 +198,7 @@ if download == 2
     catch
         disp('Station inventory not updated with elevations')
     end
-    writetable(GHCN_stations,[filepath '_stationInfoLong.csv'])
+    writetable(GHCN_stations,[filepath '_stationInfoMod.csv'])
 
 
 %if more than just savepath and download list is provided
@@ -305,7 +305,8 @@ else
 
             %store long NAME information into 'NAMES' array
             NAMES(i) = data.NAME(1);
-            ELEVATIONS(i) = data.ELEVATION(1);
+            %disp(data.ELEVATION(1))
+            ELEVATIONS{i} = data.ELEVATION(1);
 
             %crop down to include only variables of interest
             T = table(data.STATION,data.DATE,data.LATITUDE,data.LONGITUDE,...
