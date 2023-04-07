@@ -1,19 +1,19 @@
 # Historical Snow Analysis
 
-This project deals with analyzing and downloading snow data for creating climate-scale insights into global snow regimes. These scripts have been developed by Jeremy Johnston (jeremy.johnston[at]unh.edu) at the University of New Hampshire Earth Systems Research Center (ESRC). Please reach out to Jeremy with questions on usage or troubleshooting.
+This project deals with analyzing and downloading snow data for creating insights into global snow regimes. These scripts have been developed by Jeremy Johnston (jeremy.johnston[at]unh.edu) at the University of New Hampshire Earth Systems Research Center (ESRC). Please reach out to Jeremy with questions on usage or troubleshooting.
 A companion paper 'Global Snow Seasonality Regimes from Satellite Records of Snow Cover' is undergoing review, (WHEN PUBLISHED WILL ADD LINK/DOI HERE).
 
 
 ## Folders & Files
 
 * `Regrid_Global_SCA`
-<br> MATLAB codes for converting tiled MODIS or VIIRS snow cover data (NDSI) to high-resolution, gap-filled global snow cover grids.
+<br> MATLAB codes for converting tiled MODIS or VIIRS snow cover data (NDSI) to high-resolution, gap-filled global snow cover rasters.
 * `Analysis_Functions`
-<br> MATLAB functions for deriving snow metrics from long term gridded data sets.
+<br> MATLAB functions for deriving snow metrics from the produced snow cover rasters.
 * `Subset_SCA`
 <br> MATLAB codes for extracting, interpolating, and re-gridding region specific NDSI observations from VIIRS or MODIS.
 * `Download_Historical_Point_Observations`
-<br> MATLAB function fo extracting Global Historical Climatology Network (GHCN) observations from any site (or region) globally.
+<br> MATLAB function for extracting Global Historical Climatology Network (GHCN) observations from any site (or region) globally.
 
 
 ## Relevant Data Links and Sources
