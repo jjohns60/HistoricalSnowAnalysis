@@ -24,3 +24,7 @@ A companion paper 'Global Snow Seasonality Regimes from Satellite Records of Sno
 * Article on product accuracy, Hall et al., 2019 (https://hess.copernicus.org/articles/23/5227/2019/)
 * Landing page for daily observational data from GHCN (https://www.ncei.noaa.gov/products/land-based-station/global-historical-climatology-network-daily)
 * Rutgers University Global Snow Lab, Northern Hemisphere Snow Cover Portal (https://climate.rutgers.edu/snowcover/)
+
+## Dependencies
+* requires wget and MATLAB Parallel Computing Toolbox (https://www.mathworks.com/products/parallel-computing.html) for optimal performance
+* codes can be easily modified by the user to remove these dependencies (email jeremy.johnston[at]unh.edu for more information on code modification)
