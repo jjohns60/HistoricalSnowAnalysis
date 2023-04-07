@@ -14,6 +14,9 @@
 % machine and the path to the executable indicated. MATLAB built in
 % functions websave() and urlwrite() can be used with slight code
 % modifications, but have proven unreliable and can be very slow.
+%% IMPORTANT: In order to run gap filling step, must first download the 
+%%            supporting datasets to the Regrid_Global_SCA path: LINKED HERE
+
 
 %% Example 1: Map NDSI globally for a single date using MODIS data
 raw_savepath = [pwd '/MODIS_raw/']; %create location to download files locally
@@ -79,19 +82,19 @@ mkdir(SCA_GF_savepath);
 %loop through all files on the NDSI_path
 files = dir([NDSI_path '*.tif']);
 for i = 1:length(files)
+
     %create full path to NDSI file
     file = files(i).name;
     filepath = [NDSI_path file]; disp(file); %show file being processed
+
     %convert to SCA using a simple NDSI threshold of 0.1 (10 in rescaled GeoTiffs)
     %in addition to saving the files, also returns outputs including the 
     %full data grid, and corresponding datetime
     [SCA,dt] = convertNDSItoSCA(filepath,SCA_savepath,method);
 end
-
 %using binarized SCA as inputs, apply gap filling procedure to remove no
 %data cells (=255)
-
-
+gapFillingSCA(SCA_GF_savepath,SCA_savepath,1);
 %% Note:
 % For methods 4 (based on land cover) and method 6 (based on NDVI) there is
 % a third argument required by the convertNDSItoSCA() function, signifying
@@ -99,6 +102,4 @@ end
 % details. Also, the gap-filling procedure is described in detail in the
 % accompanying manuscript, 'Global Snow Seasonality Regimes from Satellite
 % Records of Snow Cover', under review in the Journal of Hydrometeorology,
-% 2023 (DOI PENDING - WILL ADD HERE ONCE PUBLISHED)
-
-
+% 2023 (DOI PENDING - WILL ADD HERE ONCE PUBLISHED).

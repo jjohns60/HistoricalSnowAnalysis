@@ -1,5 +1,6 @@
 function globalRegrid(raw_savepath,processed_savepath,username,password,wget_path,HTTPS_PATH,DATASET_ID,FILE_EXT,VAR_PATH,START_DATE,END_DATE,TARGET_RES)
-%globalRegrid Summary of this function goes here
+%globalRegrid Downloads and matches data granules to a global grid at the
+%specified resolution
 %   Effectively downloads, re-grids, and resamples global NDSI observations
 %   to a grid with a specified input resolution. Functionality has been 
 %   tested effectively for VIIRS and MODIS cloud gap filled NDSI snow cover
