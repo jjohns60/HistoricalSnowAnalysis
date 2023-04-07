@@ -26,5 +26,7 @@ A companion paper 'Global Snow Seasonality Regimes from Satellite Records of Sno
 * Rutgers University Global Snow Lab, Northern Hemisphere Snow Cover Portal (https://climate.rutgers.edu/snowcover/)
 
 ## Dependencies
+
 * requires wget and MATLAB Parallel Computing Toolbox (https://www.mathworks.com/products/parallel-computing.html) for optimal performance
 * codes can be easily modified by the user to remove these dependencies (email jeremy.johnston[at]unh.edu for more information on code modification)
+* to perform gap filling procedure, you first must download the required data files and move them to your MATLAB working directory. These files are located at: www.kaggle.come/jeremyjohnston/snow-cover-gap-filling-data-requirements and are described as well as cited within the globalRegrid() function. The files are large (~8.0GB) so ensure your computer has sufficient storage space before downloading
