@@ -4,8 +4,10 @@
 %
 % This script provides an example usage of the globalRegrid() function by
 % first downloading all MODIS NDSI granules for a single date then mapping 
-% them to a global lat/lon grid with a resolution of 0.05-degrees, provides
-% an example doing the same for VIIRS NDSI.
+% them to a global lat/lon grid with a resolution of 0.05-degrees (Example 
+% 1), provides an example doing the same for VIIRS NDSI (Example 2). The
+% final example (Example 3), applies functions to convert NDSI to SCA, then
+% produce completely gap-filled SCA rasters (0 = land, 1 = snow, 2 = water)
 %
 % Note: globalRegrid() runs the fastest and most reliable when downloading
 % files using wget. Thus, it requires wget be installed on your local
@@ -48,7 +50,7 @@ DATASET_ID = 'VNP10A1F'; %dataset id
 FILE_EXT = 'h5'; %file extension of MOD10A1F data
 VAR_PATH = '/HDFEOS/GRIDS/NPP_Grid_IMG_2D/Data Fields/CGF_NDSI_Snow_Cover'; %path to variable in downloaded file
 START_DATE = datetime(2020,10,31); %start date to process
-END_DATE = datetime(2020,10,31); %last date to process
+END_DATE = datetime(2020,11,05); %last date to process
 TARGET_RES = 0.05; %re-grid to 0.05-degree global grid
 
 %create directories to store datasets
@@ -60,5 +62,43 @@ globalRegrid(raw_savepath,processed_savepath,username,password,wget_path,HTTPS_P
 %% Note:
 % This function takes ~3-5 minutes to process a single day (globally). The
 % function may hang if NSIDC is receiving too many data requests. If quit, 
-% restarting processing should resume only downloading the still missing 
+% restarting processing should resume by only downloading the still missing 
 % files for the specified date.
+
+
+%% Example 3: Using regridded VIIRS NDSI datasets, convert to binary SCA, and apply gap filling procedure
+NDSI_path = [pwd '/VIIRS_processed/']; %provide location of the downloaded global VIIRS  files
+SCA_savepath = [pwd '/VIIRS_SCA/']; %will create new path storing files converted to binary SCA
+SCA_GF_savepath = [pwd '/VIIRS_SCA_GapFilled/']; %create new path storing the completely gap-filled SCA files
+method = 1; %method applies simple NDSI > 0.1 threshold for snow cover detection (see function documentation for other methods)
+
+%create directories to store output SCA datasets
+mkdir(SCA_savepath);
+mkdir(SCA_GF_savepath);
+
+%loop through all files on the NDSI_path
+files = dir([NDSI_path '*.tif']);
+for i = 1:length(files)
+    %create full path to NDSI file
+    file = files(i).name;
+    filepath = [NDSI_path file]; disp(file); %show file being processed
+    %convert to SCA using a simple NDSI threshold of 0.1 (10 in rescaled GeoTiffs)
+    %in addition to saving the files, also returns outputs including the 
+    %full data grid, and corresponding datetime
+    [SCA,dt] = convertNDSItoSCA(filepath,SCA_savepath,method);
+end
+
+%using binarized SCA as inputs, apply gap filling procedure to remove no
+%data cells (=255)
+
+
+%% Note:
+% For methods 4 (based on land cover) and method 6 (based on NDVI) there is
+% a third argument required by the convertNDSItoSCA() function, signifying
+% the path to the corresponding dataset. See function description for
+% details. Also, the gap-filling procedure is described in detail in the
+% accompanying manuscript, 'Global Snow Seasonality Regimes from Satellite
+% Records of Snow Cover', under review in the Journal of Hydrometeorology,
+% 2023 (DOI PENDING - WILL ADD HERE ONCE PUBLISHED)
+
+
