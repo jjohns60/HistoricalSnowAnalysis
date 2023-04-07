@@ -42,7 +42,7 @@ globalRegrid(raw_savepath,processed_savepath,username,password,wget_path,HTTPS_P
 % files for the specified date.
 
 
-%% Example 2: Map NDSI globally for a single date using VIIRS data
+%% Example 2: Map NDSI globally using VIIRS data for a 6-day period
 raw_savepath = [pwd '/VIIRS_raw/']; %create location to download files locally
 processed_savepath = [pwd '/VIIRS_processed/']; %create location to store processed global grids lcoally
 HTTPS_PATH = 'https://n5eil01u.ecs.nsidc.org/VIIRS/VNP10A1F.001/'; %path to dataset at NSIDC server
@@ -50,7 +50,7 @@ DATASET_ID = 'VNP10A1F'; %dataset id
 FILE_EXT = 'h5'; %file extension of MOD10A1F data
 VAR_PATH = '/HDFEOS/GRIDS/NPP_Grid_IMG_2D/Data Fields/CGF_NDSI_Snow_Cover'; %path to variable in downloaded file
 START_DATE = datetime(2020,10,31); %start date to process
-END_DATE = datetime(2020,11,05); %last date to process
+END_DATE = datetime(2020,11,5); %last date to process
 TARGET_RES = 0.05; %re-grid to 0.05-degree global grid
 
 %create directories to store datasets
