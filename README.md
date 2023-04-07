@@ -3,6 +3,7 @@
 This repository contains MATLAB codes for analyzing, downloading, and creating insights into global snow regimes using snow cover datasets. These scripts have been developed by Jeremy Johnston (jeremy.johnston[at]unh.edu) at the University of New Hampshire Earth Systems Research Center (ESRC). Please reach out to Jeremy with questions on usage or troubleshooting.
 A companion paper 'Global Snow Seasonality Regimes from Satellite Records of Snow Cover' is undergoing review, (WHEN PUBLISHED WILL ADD LINK/DOI HERE).
 
+![alt text](https://github.com/jjohns60/HistoricalSnowAnalysis/SCAheader_image.jpg?raw=true)
 
 ## Folders & Files
 
