@@ -10,6 +10,7 @@
 *.hdf5
 *.nc
 *.tif
+*.zip
 
 # Data Inputs folder
 Data Inputs/
