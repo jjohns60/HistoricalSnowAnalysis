@@ -3,13 +3,6 @@ function plotGHCNEnsemble(GHCN_path,start_date,end_date)
 %   Input is a folder containing GHCN site data in .csv form. Currently,
 %   only configured to plot min and max temperature and snow depth
 
-%{
-%testing
-GHCN_path = '/Users/jjohns/Desktop/GHCN_DATA/';
-start_date = datetime(2010,1,1);
-end_date = datetime(2020,12,31);
-%}
-
 files = dir([GHCN_path '*.csv']);
 files = {files.name};
 files = files(~startsWith(files,'_'));
