@@ -1,4 +1,4 @@
-function NSIDC_HTTPS_ACCESS(HTTPS_PATH,username,password,date,str_array,savepath)
+function NSIDC_HTTPS_ACCESS(HTTPS_PATH,username,password,wget_path,date,str_array,savepath)
 %NSIDC_HTTPS_ACCESS Takes an input path to a particular dataset on the
 %NSIDC server,a target datetime day, and a file search string array used to
 %indicate the dataset type and the file type of interest. Files will be 
@@ -9,18 +9,19 @@ function NSIDC_HTTPS_ACCESS(HTTPS_PATH,username,password,date,str_array,savepath
 %   HTTPS_PATH - path to dataset (i.e., 'https://n5eil01u.ecs.nsidc.org/VIIRS/VNP10A1F.001/')
 %   username - NSIDC login username as string, 'username'
 %   password - NSIDC login password as string, 'password'
+%   wget_path - path to wget executable on your system (code can be easily modified to use websave or urlwrite, but these are unreliable)
 %   date - date of interest (to download)
 %   str_array - cell array of strings to match to file names, allows download of only file types of interest (i.e., {'VNP10A1F','h5'})
 %   savepath - location of which to save the downloaded files locally
 
 
-%set permissions by updating options and headerfields
+%set permissions by updating options and headerfields (websave method only)
 options = weboptions('HeaderFields',{'Authorization',...
     ['Basic ' matlab.net.base64encode([username ':' password])]});
 %options = weboptions;
 %options.Username = username;
 %options.Password = password;
-options.Timeout = 30;
+%options.Timeout = 15;
 
 %Get list of all filenames meeting conditions (1st two string arguments are
 %required)
@@ -55,13 +56,33 @@ parfor i = 1:L
         continue
         %if it does not, then download
     else
+        
+        %create wget command
+        f_path = [HTTPS_PATH date_str '/' file];
+        command = [wget_path ' --http-user=' username ' --http-password=' ...
+            password [' -nH -nd -q --no-check-certificate --auth-no-challenge=on ' ...
+            '-r --reject "index.html*" -np -e robots=off --directory-prefix=']...
+            savepath ' ' f_path];
+
         try
-            websave([savepath file],[HTTPS_PATH date_str '/' file],options);
+            %MATLAB builtin methods websave and urlwrite are comparably slow
+            %websave([savepath file],[HTTPS_PATH date_str '/' file],options);
+            %urlwrite([HTTPS_PATH date_str '/' file],[savepath file],'Authentication','Basic','Username',username,'Password',password);
+            
+            %run the wget command
+            system(command);
+
             %show progress of download
             disp(strcat("Downloading ",num2str(i)," of ",num2str(L)))
         catch
             pause(rand*1) %to prevent 503 errors
-            websave([savepath file],[HTTPS_PATH date_str '/' file],options);
+            
+            %urlwrite([HTTPS_PATH date_str '/' file],[savepath file],'Authentication','Basic','Username',username,'Password',password);
+            %websave([savepath file],[HTTPS_PATH date_str '/' file],options);
+            
+            %run the wget command
+            system(command);
+
             %show progress of download
             disp(strcat("Downloading ",num2str(i)," of ",num2str(L)))
         end

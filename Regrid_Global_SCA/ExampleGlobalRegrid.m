@@ -16,9 +16,9 @@
 %% Example 1: Map NDSI globally for a single date using MODIS data
 raw_savepath = [pwd '/MODIS_raw/']; %create location to download files locally
 processed_savepath = [pwd '/MODIS_processed/']; %create location to store processed global grids lcoally
-username = 'jjohns60'; %%INPUT YOUR NSIDC USERNAME
-password = '2080Bent!'; %%INPUT YOUR NSIDC PASSWORD
-wget_path = '/Users/jjohns/Desktop/wget'; %%PATH TO WGET EXECUTABLE ON YOUR SYSTEM
+username = ''; %%INPUT YOUR NSIDC USERNAME
+password = ''; %%INPUT YOUR NSIDC PASSWORD
+wget_path = ''; %%PATH TO WGET EXECUTABLE ON YOUR SYSTEM
 HTTPS_PATH = 'https://n5eil01u.ecs.nsidc.org/MOST/MOD10A1F.061/'; %path to dataset at NSIDC server
 DATASET_ID = 'MOD10A1F'; %dataset id
 FILE_EXT = 'hdf'; %file extension of MOD10A1F data

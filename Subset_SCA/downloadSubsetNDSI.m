@@ -1,4 +1,4 @@
-function downloadSubsetNDSI(out_path,dataset_id,username,password,bounds,start_date,end_date,interp)
+function downloadSubsetNDSI(out_path,dataset_id,username,password,wget_path,bounds,start_date,end_date,interp)
 %downloadNDSIsubset Downloads and subsets Normalized Difference Snow Index
 %observations from MODIS or VIIRS to a specified region
 %
@@ -14,7 +14,7 @@ function downloadSubsetNDSI(out_path,dataset_id,username,password,bounds,start_d
 %   larger regions can be very slow during interpolation to fine grids (<0.01)
 %
 %   Example usage: downloadSubsetNDSI('your_path','MOD10A1F','your_NSIDC_username',
-%                  'your_NSIDC_password',[39 40 -76 -75 0.001],datetime(2015,1,27),
+%                  'your_NSIDC_password','wget_path',[39 40 -76 -75 0.001],datetime(2015,1,27),
 %                   datetime(2019,12,31),'natural')
 %
 %   INPUTS:
@@ -30,6 +30,8 @@ function downloadSubsetNDSI(out_path,dataset_id,username,password,bounds,start_d
 %   username: NSIDC username input as a string
 %
 %   password: NSIDC password input as a string
+%
+%   wget_path: local path to wget executable (fastest download method)
 %
 %   bounds: Either an input grid in the form [lat_min lat_max lon_min
 %       lon_max target_resolution] where all inputs are in degrees, an 
@@ -200,12 +202,12 @@ for i = 1:length(DATES)
     
     %Download relevant datafiles from NSIDC
     try
-        NSIDC_HTTPS_ACCESS(HTTPS_PATH,username,password,date,{dataset_id FILE_EXT tiles{:}},out_path);
+        NSIDC_HTTPS_ACCESS(HTTPS_PATH,username,password,wget_path,date,{dataset_id FILE_EXT tiles{:}},out_path);
         
     catch %if server returns error (is likely from being busy), wait and retry
         skip_i = '*'; %keep track of if there were errors during download 
         pause(rand*3)
-        NSIDC_HTTPS_ACCESS(HTTPS_PATH,username,password,date,{dataset_id FILE_EXT tiles{:}},out_path);
+        NSIDC_HTTPS_ACCESS(HTTPS_PATH,username,password,wget_path,date,{dataset_id FILE_EXT tiles{:}},out_path);
     end
 
     %Loop through temporary downloaded files in data folder

@@ -14,6 +14,7 @@
 HTTPS_PATH = 'https://n5eil01u.ecs.nsidc.org/VIIRS/VNP10A1F.001/'; %HTTPS path to dataset on NSIDC
 username = ''; % ADD YOUR NSIDC USERNAME HERE
 password = ''; % ADD YOUR NSIDC PASSWORD HERE
+wget_path = ''; %%PATH TO WGET EXECUTABLE ON YOUR SYSTEM
 date = datetime(2015,1,27); %identify day of interest as datetime object
 str_array = {'VNP10A1F','h5','h12v04','h12v05'}; %specify the dataset ID, filetype, then tiles of interest (can add multiple)
 savepath = [pwd '/VIIRS_NDSI_data/']; %set save location in local directory
@@ -22,7 +23,7 @@ savepath = [pwd '/VIIRS_NDSI_data/']; %set save location in local directory
 mkdir(savepath);
 
 %run function
-NSIDC_HTTPS_ACCESS(HTTPS_PATH,username,password,date,str_array,savepath)
+NSIDC_HTTPS_ACCESS(HTTPS_PATH,username,password,wget_path,date,str_array,savepath)
 
 
 %% Example 2: downloadSubsetNDSI which will download NDSI and interpolate for a specific region
@@ -37,7 +38,7 @@ interpolation_method = 'natural'; %specify interpolation method, see downloadSub
 mkdir(savepath);
 
 %run function, outputs will be located in created folder at 'savepath'
-downloadSubsetNDSI(savepath,dataset_id,username,password,...
+downloadSubsetNDSI(savepath,dataset_id,username,password,wget_path,...
     bounding_region,start_date,end_date,interpolation_method);
 %% Notes: 
 % These functions use MATLAB parallelization to speed the download of 
