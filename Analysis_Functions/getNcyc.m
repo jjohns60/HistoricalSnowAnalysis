@@ -87,8 +87,8 @@ if isa(date_range,"double") && date_range == 1 %use the hemisphere specific snow
             %identify files to read
             files_i = files(file_idx > 0);
             file_idx = file_idx(file_idx > 0);
-            %loop through all files appending snow cover counts to the
-            %appropriate hemisphere
+            %loop through all files appending snow cycle counts to
+            %appropriate matrix
             for ii = 1:length(files_i)
 
                 tic
@@ -109,8 +109,7 @@ if isa(date_range,"double") && date_range == 1 %use the hemisphere specific snow
                     SH_rows = (lats <= 0);
                     SH_rows = [find(SH_rows,1,'first') find(SH_rows,1,'last') - 1];
                     
-                    %stores total number of snow classifications by
-                    %hemisphere
+                    %stores number of snow on off cycles
                     Ncyc = zeros([size(D,1) size(D,2)],'uint8');
 
                     %create mask identifying locations of no data pixels
@@ -189,8 +188,8 @@ elseif isa(date_range,"double") && date_range == 2 %use the calendar year
 
             %identify files to read
             files_i = files(Y_idx);
-            %loop through all files appending snow cover counts to the
-            %appropriate hemisphere
+            %loop through all files appending snow cycle counts to
+            %appropriate matrix
             for ii = 1:length(files_i)
 
                 tic
@@ -202,8 +201,7 @@ elseif isa(date_range,"double") && date_range == 2 %use the calendar year
                 %initialize counting matrices, and increment counts
                 if ii == 1
 
-                    %stores total number of snow classifications by
-                    %hemisphere
+                    %stores number of snow on off cycles
                     Ncyc = zeros([size(D,1) size(D,2)],'uint8');
 
                     %create mask identifying locations of no data pixels
@@ -265,8 +263,7 @@ elseif isa(date_range,'datetime') %uses the specified date range
             %initialize counting matrices, and increment counts
             if i == 1
 
-                %stores total number of snow classifications by
-                %hemisphere
+                %stores total number of snow on off cycles
                 Ncyc = zeros([size(D,1) size(D,2)],'uint8');
 
                 %create mask identifying locations of no data pixels
