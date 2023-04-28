@@ -1,5 +1,5 @@
-function FSS = getFSS(path,savepath,date_range,valid_snow,valid_land,min_count)
-%getFSS Returns the length of the full snow season (FSS) considering an 
+function CSS = getCSS(path,savepath,date_range,valid_snow,valid_land,min_count)
+%getCSS Returns the length of the core snow season (CSS) considering an 
 % input date range (see 'date_range'). Requires an input folder to gridded 
 % snow cover data. Currently, works for Tiff/GeoTiff files.
 %
@@ -17,15 +17,16 @@ function FSS = getFSS(path,savepath,date_range,valid_snow,valid_land,min_count)
 %   indicative of a full data period (default = [0.95 365 (days)])
 %
 % OUTPUTS:
-% FSS - for 2D spatial inputs, will return .tif files with length of the
-%   full snow season (FSS) saved to the specified 'savepath.' FSS is
+% CSS - for 2D spatial inputs, will return .tif files with length of the
+%   core snow season (FSS) saved to the specified 'savepath.' CSS is
 %   defined as the duration (depending on input temporal resolution, i.e.,
-%   weekly or daily), from the first occurance of snow cover to the last.
-%   Will also store the most recently calculated FSS as a variable. -1 is 
+%   weekly or daily), of the longest unbroken snow covered period within a
+%   specified date range (snow year, annual, or user input). This function
+%   will also store the most recently calculated CSS as a variable. -1 is 
 %   assigned as the no data value
 %
-% Note: the larger the dataset, the slower processing (e.g., takes ~60 
-% minutes to process a single global snow year at ~1km)
+%% Note: the larger the dataset, the slower processing (e.g., takes ~60 
+%% minutes to process a single global snow year at ~1km)
 
 
 %error handling
@@ -68,7 +69,7 @@ if isa(date_range,"double") && date_range == 1 %use the hemisphere specific snow
     
     % identify each snow year within the dt list
     year_list = unique(year(dt));
-    for i = 1:(length(year_list) - 1)
+    for i = 1:1%(length(year_list) - 1)
 
         %identify files meeting condition
         SY_idx_NH = dt >= datetime(year_list(i),8,1) & dt < datetime(year_list(i+1),8,1);
@@ -355,6 +356,23 @@ elseif isa(date_range,'datetime') %uses the specified date range
                 last_SCA(snow_idx) = i;
 
             end
+
+
+            %keep track of longest run of snow observations between no snow observations
+            %increment counts at all sites during snow on period
+            SLcount(SLcount_idx) = SLcount(SLcount_idx) + 1;
+            %check if the counts are greater than the current max run, but only
+            % in locations that are at the end of a snow on period
+            if iter == length(filesNH_sy) %special case if SLmax runs through end of the time series
+                idx_NH = ((SLcount_NH > SLmax_NH) & idxSnow2NoSnow_NH) | ((SLcount_NH > SLmax_NH) & SCA_NH == 1);
+            else %all other cases, update when changing from snow to no snow if new SLcount is longer than existing longest snow on period
+                idx_NH = (SLcount_NH > SLmax_NH) & idxSnow2NoSnow_NH;
+            end
+            %if so, update the max no snow run (between snow obs)
+            SLmax_NH(idx_NH) = SLcount_NH(idx_NH);
+            %reset counter at all locations that switched back to no snow
+            SLcount_NH(idxSnow2NoSnow_NH) = 0;
+
 
             toc
 
