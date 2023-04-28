@@ -47,17 +47,6 @@ elseif nargin == 5
     min_count = [0.95 365];
 end
 
-
-%{
-%testing
-path = '/Volumes/GRA_Data_Backup/POSTDOC_UNH/SCA_REGRID/MODIS_CGF_NDSI10_GapFilled/';
-savepath = '/Volumes/GRA_Data_Backup/POSTDOC_UNH/SCA_REGRID/TESTING/';
-date_range = 1;
-valid_snow = 1;
-valid_land = 0;
-min_count = [0.95 365];
-%}
-
 %extract timestamps from each file (assumes consistent naming structure)
 files = dir([path '*.tif']);
 dt = NaT(size(files));

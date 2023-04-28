@@ -23,11 +23,6 @@ if nargin < 4
     error('Not enough inputs')
 end
 
-SCD_path = '/Users/jjohns/Desktop/SCA/SCD/';
-FSS_path = '/Users/jjohns/Desktop/SCA/FSS/';
-savepath = '/Users/jjohns/Desktop/SCA/SSP/';
-fill = -1;
-
 %get all file names
 SCD_files = dir([SCD_path '*.tif']); SCD_files = {SCD_files.name};
 FSS_files = dir([FSS_path '*.tif']); FSS_files = {FSS_files.name};
