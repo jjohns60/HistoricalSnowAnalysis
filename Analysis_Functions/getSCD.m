@@ -62,7 +62,7 @@ dt = NaT(size(files));
 for i = 1:length(dt)
     file = files(i).name;
     f = split(file,'_');
-    dt(i) = datetime(str2double(f{4}),str2double(f{5}),str2double(f{6}));
+    dt(i) = datetime(str2double(f{end-3}),str2double(f{end-2}),str2double(f{end-1}));
 end
 
 %check for the date_range input type and build index specifying file ranges
