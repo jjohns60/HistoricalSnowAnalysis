@@ -138,7 +138,7 @@ if isa(date_range,"double") && date_range == 1 %use the hemisphere specific snow
                         %increment counts at all sites during snow on period
                         SLcount_i = SLcount(NH_rows(1):NH_rows(2),:);
                         SLcount_idx_i = SLcount_idx(NH_rows(1):NH_rows(2),:);
-                        SLcount_i = SLcount_i(SLcount_idx_i) + 1;
+                        SLcount_i(SLcount_idx_i) = SLcount_i(SLcount_idx_i) + 1;
                         SLcount(NH_rows(1):NH_rows(2),:) = SLcount_i;
 
                         %set snow to no snow index to false in the southern
@@ -165,7 +165,7 @@ if isa(date_range,"double") && date_range == 1 %use the hemisphere specific snow
                         %increment counts at all sites during snow on period
                         SLcount_i = SLcount(SH_rows(1):SH_rows(2),:);
                         SLcount_idx_i = SLcount_idx(SH_rows(1):SH_rows(2),:);
-                        SLcount_i = SLcount_i(SLcount_idx_i) + 1;
+                        SLcount_i(SLcount_idx_i) = SLcount_i(SLcount_idx_i) + 1;
                         SLcount(SH_rows(1):SH_rows(2),:) = SLcount_i;
 
                         %set snow to no snow index to false in the southern
@@ -229,7 +229,7 @@ if isa(date_range,"double") && date_range == 1 %use the hemisphere specific snow
                         %increment counts at all sites during snow on period
                         SLcount_i = SLcount(NH_rows(1):NH_rows(2),:);
                         SLcount_idx_i = SLcount_idx(NH_rows(1):NH_rows(2),:);
-                        SLcount_i = SLcount_i(SLcount_idx_i) + 1;
+                        SLcount_i(SLcount_idx_i) = SLcount_i(SLcount_idx_i) + 1;
                         SLcount(NH_rows(1):NH_rows(2),:) = SLcount_i;
 
                         %set snow to no snow index to false in the southern
@@ -257,7 +257,7 @@ if isa(date_range,"double") && date_range == 1 %use the hemisphere specific snow
                         %increment counts at all sites during snow on period
                         SLcount_i = SLcount(SH_rows(1):SH_rows(2),:);
                         SLcount_idx_i = SLcount_idx(SH_rows(1):SH_rows(2),:);
-                        SLcount_i = SLcount_i(SLcount_idx_i) + 1;
+                        SLcount_i(SLcount_idx_i) = SLcount_i(SLcount_idx_i) + 1;
                         SLcount(SH_rows(1):SH_rows(2),:) = SLcount_i;
 
                         %set snow to no snow index to false in the southern
