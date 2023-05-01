@@ -6,8 +6,8 @@ function CSS = getCSS(path,savepath,date_range,valid_snow,valid_land,min_count)
 % INPUTS:
 % path - path to folder containing binary snow cover files
 % savepath - location to store output data
-% date_range - specify 1 for snow year (default), 2 for calendar year, or 
-%   input a datetime array in the format: [start_date end_date]
+% date_range - specify 1 for snow year (default), 2 for calendar year 
+%   (not recommended), or input a datetime array in the format: [start_date end_date]
 % valid_snow - specify the variable in the .tif file representing snow
 %   covered pixels (default == 1)
 % valid_land - specify the variable in the .tif file representing bare land
@@ -25,8 +25,9 @@ function CSS = getCSS(path,savepath,date_range,valid_snow,valid_land,min_count)
 %   will also store the most recently calculated CSS as a variable. -1 is 
 %   assigned as the no data value
 %
-%% Note: the larger the dataset, the slower processing (e.g., takes ~60 
-%% minutes to process a single global snow year at ~1km)
+% Note: this is the most computationally expensive function. The larger the
+% dataset, the slower processing (e.g., takes ~100 minutes to process a 
+% single global snow year at ~1km)
 
 
 %error handling
@@ -69,7 +70,7 @@ if isa(date_range,"double") && date_range == 1 %use the hemisphere specific snow
     
     % identify each snow year within the dt list
     year_list = unique(year(dt));
-    for i = 1:1%(length(year_list) - 1)
+    for i = 1:(length(year_list) - 1)
 
         %identify files meeting condition
         SY_idx_NH = dt >= datetime(year_list(i),8,1) & dt < datetime(year_list(i+1),8,1);
@@ -99,6 +100,9 @@ if isa(date_range,"double") && date_range == 1 %use the hemisphere specific snow
                 var = file_idx(ii);
                 [D,R] = readgeoraster([path file_ii]);
 
+                %identify locations with snow
+                snow_idx = (D == valid_snow);
+
                 %initialize counting matrices, and increment counts
                 if ii == 1
 
@@ -110,99 +114,185 @@ if isa(date_range,"double") && date_range == 1 %use the hemisphere specific snow
                     SH_rows = (lats <= 0);
                     SH_rows = [find(SH_rows,1,'first') find(SH_rows,1,'last') - 1];
                     
-                    %stores the iteration of the first occurance of snow cover
-                    first_SCA = zeros([size(D,1) size(D,2)],'int16');
-                    %stores the iteration of the last occurance of snow cover
-                    last_SCA = zeros([size(D,1) size(D,2)],'int16');
+                    %to keep track of consecutive snow lengths
+                    SLcount = zeros(size(D),'int16');
+                    CSS = zeros(size(D),'int16');
 
-                    %create mask identifying locations of no data pixels
-                    snow_idx = (D == valid_snow);
-                    land_idx = (D == valid_land);
-                    first_SCA_idx = (snow_idx & first_SCA == 0);
-                    mask = ~(snow_idx | land_idx);
+                    %store as previous timestep grid for comparison
+                    SCA_prev = D;
+
+                    %create placeholder logical indices (only for first loop)
+                    idxSnow2NoSnow = (SLcount ~= 0); %all false in first iteration
+                    idxNoSnow2Snow = snow_idx; %true in locations starting with snow
+                    SLcount_idx = idxNoSnow2Snow; %locations to increment counter
+
+                    %create mask of locations without valid observations
+                    mask = ~(snow_idx | D == valid_land);
 
                     %check file_idx to determine which values to update
                     if var == 1 % == 1, only increment NH counts
 
-                        %only update NH values (trim to NH before assigning number)
-                        first_SCA_i = first_SCA(NH_rows(1):NH_rows(2),:); %extract only the NH from the matrix storing first snow occurances
-                        first_SCA_idx = first_SCA_idx(NH_rows(1):NH_rows(2),:); %extract only the NH from the matrix storing the locations of places with their first snow cover
-                        first_SCA_i(first_SCA_idx) = ii; %update the locations with the new number representing the timestep with first snow occurance
-                        first_SCA(NH_rows(1):NH_rows(2),:) = first_SCA_i; %apply these back to the original/global data
+                        %only update NH values
 
-                        last_SCA_i = last_SCA(NH_rows(1):NH_rows(2),:); %extract only the NH from the matrix storing first snow occurances
-                        snow_idx = snow_idx(NH_rows(1):NH_rows(2),:); %extract only the NH from the matrix storing the locations of places with their first snow cover
-                        last_SCA_i(snow_idx) = ii; %update the locations with the new number representing the timestep with first snow occurance
-                        last_SCA(NH_rows(1):NH_rows(2),:) = last_SCA_i; %apply these back to the original/global data
-                                
+                        %keep track of longest run of snow observations between no snow observations
+                        %increment counts at all sites during snow on period
+                        SLcount_i = SLcount(NH_rows(1):NH_rows(2),:);
+                        SLcount_idx_i = SLcount_idx(NH_rows(1):NH_rows(2),:);
+                        SLcount_i = SLcount_i(SLcount_idx_i) + 1;
+                        SLcount(NH_rows(1):NH_rows(2),:) = SLcount_i;
+
+                        %set snow to no snow index to false in the southern
+                        %hemisphere
+                        idxSnow2NoSnow(SH_rows(1):SH_rows(2),:) = false;
+
+                        %check if the counts are greater than the current max run, but only
+                        % in locations that are at the end of a snow on period
+                        if i == length(files_i) %special case if CSS runs through end of the time series
+                            idx = ((SLcount > CSS) & idxSnow2NoSnow) | ((SLcount > CSS) & D == 1);
+                        else %all other cases, update when changing from snow to no snow if new SLcount is longer than existing longest snow on period
+                            idx = (SLcount > CSS) & idxSnow2NoSnow;
+                        end
+                        %if so, update the max no snow run (between snow obs)
+                        CSS(idx) = SLcount(idx);
+                        %reset counter at all locations that switched back to no snow
+                        SLcount(idxSnow2NoSnow) = 0;
+                             
                     elseif var == 2 % == 2, only update SH counts
 
-                        %only update SH values (trim to NH before assigning number)
-                        first_SCA_i = first_SCA(SH_rows(1):SH_rows(2),:); %extract only the NH from the matrix storing first snow occurances
-                        first_SCA_idx = first_SCA_idx(SH_rows(1):SH_rows(2),:); %extract only the NH from the matrix storing the locations of places with their first snow cover
-                        first_SCA_i(first_SCA_idx) = ii; %update the locations with the new number representing the timestep with first snow occurance
-                        first_SCA(SH_rows(1):SH_rows(2),:) = first_SCA_i; %apply these back to the original/global data
+                        %only update SH values
 
-                        last_SCA_i = last_SCA(SH_rows(1):SH_rows(2),:); %extract only the NH from the matrix storing first snow occurances
-                        snow_idx = snow_idx(SH_rows(1):SH_rows(2),:); %extract only the NH from the matrix storing the locations of places with their first snow cover
-                        last_SCA_i(snow_idx) = ii; %update the locations with the new number representing the timestep with first snow occurance
-                        last_SCA(SH_rows(1):SH_rows(2),:) = last_SCA_i; %apply these back to the original/global data
-                         
-                        
+                        %keep track of longest run of snow observations between no snow observations
+                        %increment counts at all sites during snow on period
+                        SLcount_i = SLcount(SH_rows(1):SH_rows(2),:);
+                        SLcount_idx_i = SLcount_idx(SH_rows(1):SH_rows(2),:);
+                        SLcount_i = SLcount_i(SLcount_idx_i) + 1;
+                        SLcount(SH_rows(1):SH_rows(2),:) = SLcount_i;
+
+                        %set snow to no snow index to false in the southern
+                        %hemisphere
+                        idxSnow2NoSnow(NH_rows(1):NH_rows(2),:) = false;
+
+                        %check if the counts are greater than the current max run, but only
+                        % in locations that are at the end of a snow on period
+                        if i == length(files_i) %special case if CSS runs through end of the time series
+                            idx = ((SLcount > CSS) & idxSnow2NoSnow) | ((SLcount > CSS) & D == 1);
+                        else %all other cases, update when changing from snow to no snow if new SLcount is longer than existing longest snow on period
+                            idx = (SLcount > CSS) & idxSnow2NoSnow;
+                        end
+                        %if so, update the max no snow run (between snow obs)
+                        CSS(idx) = SLcount(idx);
+                        %reset counter at all locations that switched back to no snow
+                        SLcount(idxSnow2NoSnow) = 0;
+
                     elseif var == 3 % == 3, update both
 
-                        %check for first occurances of snow cover, update
-                        first_SCA(first_SCA_idx) = ii;
-
-                        %keep running count of most recent snow cover period
-                        last_SCA(snow_idx) = ii;
-                        
+                        %keep track of longest run of snow observations between no snow observations
+                        %increment counts at all sites during snow on period
+                        SLcount(SLcount_idx) = SLcount(SLcount_idx) + 1;
+                        %check if the counts are greater than the current max run, but only
+                        % in locations that are at the end of a snow on period
+                        if i == length(files_i) %special case if CSS runs through end of the time series
+                            idx = ((SLcount > CSS) & idxSnow2NoSnow) | ((SLcount > CSS) & D == 1);
+                        else %all other cases, update when changing from snow to no snow if new SLcount is longer than existing longest snow on period
+                            idx = (SLcount > CSS) & idxSnow2NoSnow;
+                        end
+                        %if so, update the max no snow run (between snow obs)
+                        CSS(idx) = SLcount(idx);
+                        %reset counter at all locations that switched back to no snow
+                        SLcount(idxSnow2NoSnow) = 0;
+                                            
                     end
               
                 %increment counts
                 else
 
-                    %identify locations with snow cover
-                    snow_idx = (D == valid_snow);
-                    first_SCA_idx = (snow_idx & first_SCA == 0);
-                    
+                    %identify locations going from snow to no snow
+                    idxSnow2NoSnow = (SCA_prev == 1) & (D == 0);
+                    %identify locations going from no snow to snow
+                    idxNoSnow2Snow = (SCA_prev == 0) & (snow_idx);
+
+                    %start counting at a location just switching from no snow
+                    %to snow (includes prior iterations that switched) and stop
+                    %counts at locations switching from snow to no snow
+                    SLcount_idx(idxNoSnow2Snow) = true; %update locations to start counting
+                    SLcount_idx(idxSnow2NoSnow) = false; %update locations to stop counting
+
+                    %update previous timestep array
+                    SCA_prev = D;           
                     
                     %check file_idx to determine which values to increment
                     if var == 1 % == 1, only increment NH counts
 
-                        %only update NH values (trim to NH before assigning number)
-                        first_SCA_i = first_SCA(NH_rows(1):NH_rows(2),:); %extract only the NH from the matrix storing first snow occurances
-                        first_SCA_idx = first_SCA_idx(NH_rows(1):NH_rows(2),:); %extract only the NH from the matrix storing the locations of places with their first snow cover
-                        first_SCA_i(first_SCA_idx) = ii; %update the locations with the new number representing the timestep with first snow occurance
-                        first_SCA(NH_rows(1):NH_rows(2),:) = first_SCA_i; %apply these back to the original/global data
+                        %only update NH values
 
-                        last_SCA_i = last_SCA(NH_rows(1):NH_rows(2),:); %extract only the NH from the matrix storing first snow occurances
-                        snow_idx = snow_idx(NH_rows(1):NH_rows(2),:); %extract only the NH from the matrix storing the locations of places with their first snow cover
-                        last_SCA_i(snow_idx) = ii; %update the locations with the new number representing the timestep with first snow occurance
-                        last_SCA(NH_rows(1):NH_rows(2),:) = last_SCA_i; %apply these back to the original/global data
-                         
+                        %keep track of longest run of snow observations between no snow observations
+                        %increment counts at all sites during snow on period
+                        SLcount_i = SLcount(NH_rows(1):NH_rows(2),:);
+                        SLcount_idx_i = SLcount_idx(NH_rows(1):NH_rows(2),:);
+                        SLcount_i = SLcount_i(SLcount_idx_i) + 1;
+                        SLcount(NH_rows(1):NH_rows(2),:) = SLcount_i;
+
+                        %set snow to no snow index to false in the southern
+                        %hemisphere
+                        idxSnow2NoSnow(SH_rows(1):SH_rows(2),:) = false;
+
+                        %check if the counts are greater than the current max run, but only
+                        % in locations that are at the end of a snow on period
+                        if i == length(files_i) %special case if CSS runs through end of the time series
+                            idx = ((SLcount > CSS) & idxSnow2NoSnow) | ((SLcount > CSS) & D == 1);
+                        else %all other cases, update when changing from snow to no snow if new SLcount is longer than existing longest snow on period
+                            idx = (SLcount > CSS) & idxSnow2NoSnow;
+                        end
+                        %if so, update the max no snow run (between snow obs)
+                        CSS(idx) = SLcount(idx);
+                        %reset counter at all locations that switched back to no snow
+                        SLcount(idxSnow2NoSnow) = 0;
+
                                                
                     elseif var == 2 % == 2, only increment SH counts
 
-                        %only update SH values (trim to NH before assigning number)
-                        first_SCA_i = first_SCA(SH_rows(1):SH_rows(2),:); %extract only the NH from the matrix storing first snow occurances
-                        first_SCA_idx = first_SCA_idx(SH_rows(1):SH_rows(2),:); %extract only the NH from the matrix storing the locations of places with their first snow cover
-                        first_SCA_i(first_SCA_idx) = ii; %update the locations with the new number representing the timestep with first snow occurance
-                        first_SCA(SH_rows(1):SH_rows(2),:) = first_SCA_i; %apply these back to the original/global data
+                        %only update SH values
 
-                        last_SCA_i = last_SCA(SH_rows(1):SH_rows(2),:); %extract only the NH from the matrix storing first snow occurances
-                        snow_idx = snow_idx(SH_rows(1):SH_rows(2),:); %extract only the NH from the matrix storing the locations of places with their first snow cover
-                        last_SCA_i(snow_idx) = ii; %update the locations with the new number representing the timestep with first snow occurance
-                        last_SCA(SH_rows(1):SH_rows(2),:) = last_SCA_i; %apply these back to the original/global data
-                         
+                        %keep track of longest run of snow observations between no snow observations
+                        %increment counts at all sites during snow on period
+                        SLcount_i = SLcount(SH_rows(1):SH_rows(2),:);
+                        SLcount_idx_i = SLcount_idx(SH_rows(1):SH_rows(2),:);
+                        SLcount_i = SLcount_i(SLcount_idx_i) + 1;
+                        SLcount(SH_rows(1):SH_rows(2),:) = SLcount_i;
+
+                        %set snow to no snow index to false in the southern
+                        %hemisphere
+                        idxSnow2NoSnow(NH_rows(1):NH_rows(2),:) = false;
+
+                        %check if the counts are greater than the current max run, but only
+                        % in locations that are at the end of a snow on period
+                        if i == length(files_i) %special case if CSS runs through end of the time series
+                            idx = ((SLcount > CSS) & idxSnow2NoSnow) | ((SLcount > CSS) & D == 1);
+                        else %all other cases, update when changing from snow to no snow if new SLcount is longer than existing longest snow on period
+                            idx = (SLcount > CSS) & idxSnow2NoSnow;
+                        end
+                        %if so, update the max no snow run (between snow obs)
+                        CSS(idx) = SLcount(idx);
+                        %reset counter at all locations that switched back to no snow
+                        SLcount(idxSnow2NoSnow) = 0;
+                 
                     elseif var == 3 % == 3, increment both
 
-                        %check for first occurances of snow cover, update
-                        first_SCA(first_SCA_idx) = ii;
-
-                        %keep running count of most recent snow cover period
-                        last_SCA(snow_idx) = ii;
-                        
+                        %keep track of longest run of snow observations between no snow observations
+                        %increment counts at all sites during snow on period
+                        SLcount(SLcount_idx) = SLcount(SLcount_idx) + 1;
+                        %check if the counts are greater than the current max run, but only
+                        % in locations that are at the end of a snow on period
+                        if i == length(files_i) %special case if CSS runs through end of the time series
+                            idx = ((SLcount > CSS) & idxSnow2NoSnow) | ((SLcount > CSS) & D == 1);
+                        else %all other cases, update when changing from snow to no snow if new SLcount is longer than existing longest snow on period
+                            idx = (SLcount > CSS) & idxSnow2NoSnow;
+                        end
+                        %if so, update the max no snow run (between snow obs)
+                        CSS(idx) = SLcount(idx);
+                        %reset counter at all locations that switched back to no snow
+                        SLcount(idxSnow2NoSnow) = 0;
+                   
                     end
                        
                 end
@@ -212,19 +302,19 @@ if isa(date_range,"double") && date_range == 1 %use the hemisphere specific snow
             end
             
         else
+            %create empty array for CSS (to ensure an output argument)
+            CSS = NaN;
             %if there are not enough valid data frames, will skip to to the
             % next iteration without saving
+            disp(['Not processed, too few timesteps for year: ' num2str(year_list(i))])
             continue
         end
 
-        %compute FSS length, inclusive
-        FSS = (last_SCA - first_SCA) + 1;
-
         %save outputs
         f = split(file_ii,'_');
-        fname = ['FSS_' f{1} '_' f{2} '_SY' num2str(year_list(i)) '-' num2str(year_list(i + 1)) '_' f{end}];
-        FSS(mask) = -1;
-        geotiffwrite([savepath fname],FSS,R);
+        fname = ['CSS_' f{1} '_' f{2} '_SY' num2str(year_list(i)) '-' num2str(year_list(i + 1)) '_' f{end}];
+        CSS(mask) = -1;
+        geotiffwrite([savepath fname],CSS,R);
 
     end    
 
@@ -253,56 +343,77 @@ elseif isa(date_range,"double") && date_range == 2 %use the calendar year
                 file_ii = files_i(ii).name; disp(file_ii);
                 [D,R] = readgeoraster([path file_ii]);
 
+                %identify locations with snow
+                snow_idx = (D == valid_snow);
+
                 %initialize counting matrices, and increment counts
                 if ii == 1
 
-                    %stores the iteration of the first occurance of snow cover
-                    first_SCA = zeros([size(D,1) size(D,2)],'int16');
-                    %stores the iteration of the last occurance of snow cover
-                    last_SCA = zeros([size(D,1) size(D,2)],'int16');
+                    %to keep track of consecutive snow lengths
+                    SLcount = zeros(size(D),'int16');
+                    CSS = zeros(size(D),'int16');
 
-                    %create mask identifying locations of no data pixels
-                    snow_idx = (D == valid_snow);
-                    land_idx = (D == valid_land);
-                    mask = ~(snow_idx | land_idx);
+                    %store as previous timestep grid for comparison
+                    SCA_prev = D;
 
-                    %identify locations with snow cover in the first
-                    %timestep, update the matrix
-                    first_SCA(snow_idx) = ii;
-                    %keep running count of most recent snow cover period
-                    last_SCA(snow_idx) = ii;
+                    %create placeholder logical indices (only for first loop)
+                    idxSnow2NoSnow = (SLcount ~= 0); %all false in first iteration
+                    idxNoSnow2Snow = snow_idx; %true in locations starting with snow
+                    SLcount_idx = idxNoSnow2Snow; %locations to increment counter
+
+                    %create NH mask
+                    mask = ~(snow_idx | D == valid_land);
 
                 else
 
-                    %identify locations with snow cover
-                    snow_idx = (D == valid_snow);
-                    first_SCA_idx = (snow_idx & first_SCA == 0);
+                    %identify locations going from snow to no snow
+                    idxSnow2NoSnow = (SCA_prev == 1) & (D == 0);
+                    %identify locations going from no snow to snow
+                    idxNoSnow2Snow = (SCA_prev == 0) & (snow_idx);
 
-                    %check for first occurances of snow cover, update
-                    first_SCA(first_SCA_idx) = ii;
+                    %start counting at a location just switching from no snow
+                    %to snow (includes prior iterations that switched) and stop
+                    %counts at locations switching from snow to no snow
+                    SLcount_idx(idxNoSnow2Snow) = true; %update locations to start counting
+                    SLcount_idx(idxSnow2NoSnow) = false; %update locations to stop counting
 
-                    %keep running count of most recent snow cover period
-                    last_SCA(snow_idx) = ii;
+                    %update previous timestep array
+                    SCA_prev = D;
 
                 end
+
+                %keep track of longest run of snow observations between no snow observations
+                %increment counts at all sites during snow on period
+                SLcount(SLcount_idx) = SLcount(SLcount_idx) + 1;
+                %check if the counts are greater than the current max run, but only
+                % in locations that are at the end of a snow on period
+                if i == length(files_i) %special case if CSS runs through end of the time series
+                    idx = ((SLcount > CSS) & idxSnow2NoSnow) | ((SLcount > CSS) & D == 1);
+                else %all other cases, update when changing from snow to no snow if new SLcount is longer than existing longest snow on period
+                    idx = (SLcount > CSS) & idxSnow2NoSnow;
+                end
+                %if so, update the max no snow run (between snow obs)
+                CSS(idx) = SLcount(idx);
+                %reset counter at all locations that switched back to no snow
+                SLcount(idxSnow2NoSnow) = 0;
 
                 toc
 
             end
         else
+            %create empty array for CSS (to ensure an output argument)
+            CSS = NaN;
             %if there are not enough valid data frames, will skip to to the
             % next iteration without saving
+            disp(['Not processed, too few timesteps for year: ' num2str(year_list(i))])
             continue
         end
 
-        %compute FSS length, inclusive
-        FSS = (last_SCA - first_SCA) + 1;
-
         %save outputs
         f = split(file_ii,'_');
-        fname = ['FSS_' f{1} '_' f{2} '_' num2str(year_list(i)) '_' f{end}];
-        FSS(mask) = -1;
-        geotiffwrite([savepath fname],FSS,R);
+        fname = ['CSS_' f{1} '_' f{2} '_' num2str(year_list(i)) '_' f{end}];
+        CSS(mask) = -1;
+        geotiffwrite([savepath fname],CSS,R);
 
     end
     
@@ -324,55 +435,59 @@ elseif isa(date_range,'datetime') %uses the specified date range
             file_i = files_i(i).name; disp(file_i);
             [D,R] = readgeoraster([path file_i]);
 
+            %identify locations with snow
+            snow_idx = (D == valid_snow);
+
             %initialize counting matrices, and increment counts
             if i == 1
 
-                %stores the iteration of the first occurance of snow cover
-                first_SCA = zeros([size(D,1) size(D,2)],'int16');
-                %stores the iteration of the last occurance of snow cover
-                last_SCA = zeros([size(D,1) size(D,2)],'int16');
+                %to keep track of consecutive snow lengths
+                SLcount = zeros(size(D),'int16');
+                CSS = zeros(size(D),'int16');
 
-                %create mask identifying locations of no data pixels
-                snow_idx = (D == valid_snow);
-                land_idx = (D == valid_land);
-                mask = ~(snow_idx | land_idx);
+                %store as previous timestep grid for comparison
+                SCA_prev = D;
 
-                %identify locations with snow cover in the first
-                %timestep, update the matrix
-                first_SCA(snow_idx) = i;
-                %keep running count of most recent snow cover period
-                last_SCA(snow_idx) = i;
+                %create placeholder logical indices (only for first loop) 
+                idxSnow2NoSnow = (SLcount ~= 0); %all false in first iteration
+                idxNoSnow2Snow = snow_idx; %true in locations starting with snow
+                SLcount_idx = idxNoSnow2Snow; %locations to increment counter
+
+                %create NH mask
+                mask = ~(snow_idx | D == valid_land);
 
             else
                 
-                %identify locations with snow cover    
-                snow_idx = (D == valid_snow);
-                first_SCA_idx = (snow_idx & first_SCA == 0);
+                %identify locations going from snow to no snow
+                idxSnow2NoSnow = (SCA_prev == 1) & (D == 0);
+                %identify locations going from no snow to snow
+                idxNoSnow2Snow = (SCA_prev == 0) & (snow_idx);
 
-                %check for first occurances of snow cover, update
-                first_SCA(first_SCA_idx) = i;
+                %start counting at a location just switching from no snow
+                %to snow (includes prior iterations that switched) and stop
+                %counts at locations switching from snow to no snow
+                SLcount_idx(idxNoSnow2Snow) = true; %update locations to start counting
+                SLcount_idx(idxSnow2NoSnow) = false; %update locations to stop counting
 
-                %keep running count of most recent snow cover period
-                last_SCA(snow_idx) = i;
+                %update previous timestep array
+                SCA_prev = D;
 
             end
-
 
             %keep track of longest run of snow observations between no snow observations
             %increment counts at all sites during snow on period
             SLcount(SLcount_idx) = SLcount(SLcount_idx) + 1;
             %check if the counts are greater than the current max run, but only
             % in locations that are at the end of a snow on period
-            if iter == length(filesNH_sy) %special case if SLmax runs through end of the time series
-                idx_NH = ((SLcount_NH > SLmax_NH) & idxSnow2NoSnow_NH) | ((SLcount_NH > SLmax_NH) & SCA_NH == 1);
+            if i == length(files_i) %special case if SLmax runs through end of the time series
+                idx = ((SLcount > CSS) & idxSnow2NoSnow) | ((SLcount > CSS) & D == 1);
             else %all other cases, update when changing from snow to no snow if new SLcount is longer than existing longest snow on period
-                idx_NH = (SLcount_NH > SLmax_NH) & idxSnow2NoSnow_NH;
+                idx = (SLcount > CSS) & idxSnow2NoSnow;
             end
             %if so, update the max no snow run (between snow obs)
-            SLmax_NH(idx_NH) = SLcount_NH(idx_NH);
+            CSS(idx) = SLcount(idx);
             %reset counter at all locations that switched back to no snow
-            SLcount_NH(idxSnow2NoSnow_NH) = 0;
-
+            SLcount(idxSnow2NoSnow) = 0;
 
             toc
 
@@ -382,16 +497,13 @@ elseif isa(date_range,'datetime') %uses the specified date range
         error('No valid SCA files found within the input date range')
     end
 
-    %compute FSS length, inclusive
-    FSS = (last_SCA - first_SCA) + 1;
-
     %save outputs
     d1 = date_range(1); d1.Format = 'uuuu-MM-dd';
     d2 = date_range(2); d2.Format = 'uuuu-MM-dd';
     f = split(file_i,'_');
-    fname = ['FSS_' f{1} '_' f{2} '_' char(d1) '_' char(d2) '_' f{end}];
-    FSS(mask) = -1;
-    geotiffwrite([savepath fname],FSS,R);
+    fname = ['CSS_' f{1} '_' f{2} '_' char(d1) '_' char(d2) '_' f{end}];
+    CSS(mask) = -1;
+    geotiffwrite([savepath fname],CSS,R);
 
 %catch errors
 else
