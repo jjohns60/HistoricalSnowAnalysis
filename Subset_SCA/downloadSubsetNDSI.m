@@ -64,9 +64,9 @@ function downloadSubsetNDSI(out_path,dataset_id,username,password,wget_path,boun
 %   replaced with a subset .tif, programmatic output is null
 
 %default setting
-if nargin < 5
+if nargin < 8
     error('Missing inputs')
-elseif nargin == 5
+elseif nargin == 8
     interp = 'natural';
 end
 
