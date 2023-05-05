@@ -99,7 +99,7 @@ if isa(date_range,"double") && date_range == 1 %use the hemisphere specific snow
                 tic
 
                 %load in file data and georeferencing information
-                file_ii = files_i(ii).name; disp(file_ii);
+                file_ii = files_i(ii).name;
                 var = file_idx(ii);
                 [D,R] = readgeoraster([path file_ii]);
 
@@ -117,7 +117,19 @@ if isa(date_range,"double") && date_range == 1 %use the hemisphere specific snow
                     NH_rows = [find(NH_rows,1,'first') find(NH_rows,1,'last')];
                     SH_rows = (lats <= 0);
                     SH_rows = [find(SH_rows,1,'first') find(SH_rows,1,'last') - 1];
-                    
+
+                    %check if there is data in the Northern Hemisphere
+                    NH_exist = 1;
+                    if isempty(NH_rows)
+                        NH_exist = 0;
+                    end
+
+                    %check if there is data in the Southern Hemisphere
+                    SH_exist = 1;
+                    if isempty(SH_rows)
+                        SH_exist = 0;
+                    end
+      
                     %stores total number of snow classifications by
                     %hemisphere
                     SCD = zeros([size(D,1) size(D,2)],'int16');
@@ -126,61 +138,79 @@ if isa(date_range,"double") && date_range == 1 %use the hemisphere specific snow
                     VALID = zeros([size(D,1) size(D,2)],'int16');
 
                     %check file_idx to determine which values to increment
-                    if var == 1 % == 1, only increment NH counts
-
-                        %set all values below equator to 0
-                        snow_idx(SH_rows(1):SH_rows(2),:) = 0;
-                        land_idx(SH_rows(1):SH_rows(2),:) = 0;
-                        SCD = SCD + snow_idx;
-                        VALID = VALID + snow_idx + land_idx;
-                                             
-                    elseif var == 2 % == 2, only increment SH counts
-
-                        %set all values above equator to 0
-                        snow_idx(NH_rows(1):NH_rows(2),:) = 0;
-                        land_idx(NH_rows(1):NH_rows(2),:) = 0;
-                        SCD = SCD + snow_idx;
-                        VALID = VALID + snow_idx + land_idx;
+                    if (var == 1) && (NH_exist == 1) % == 1, only increment NH counts
                         
+                        if SH_exist == 1
+                            %set all values below equator to 0
+                            snow_idx(SH_rows(1):SH_rows(2),:) = 0;
+                            land_idx(SH_rows(1):SH_rows(2),:) = 0;
+                        else
+                            SCD = SCD + snow_idx;
+                            VALID = VALID + snow_idx + land_idx;
+                        end
+                                             
+                    elseif (var == 2) && (SH_exist == 1) % == 2, only increment SH counts
+                        
+                        if NH_exist == 1
+                            %set all values above equator to 0
+                            snow_idx(NH_rows(1):NH_rows(2),:) = 0;
+                            land_idx(NH_rows(1):NH_rows(2),:) = 0;
+                        else
+                            SCD = SCD + snow_idx;
+                            VALID = VALID + snow_idx + land_idx;
+                        end
+
                     elseif var == 3 % == 3, increment both
 
                         %increment all locations
                         SCD = SCD + snow_idx;
                         VALID = VALID + snow_idx + land_idx;
-                        
+                    
+                    else    
+                        continue;
                     end
               
                 %increment counts
                 else
 
                     %check file_idx to determine which values to increment
-                    if var == 1 % == 1, only increment NH counts
+                    if (var == 1) && (NH_exist == 1) % == 1, only increment NH counts
 
-                        %set all values below equator to 0
-                        snow_idx(SH_rows(1):SH_rows(2),:) = 0;
-                        land_idx(SH_rows(1):SH_rows(2),:) = 0;
-                        SCD = SCD + snow_idx;
-                        VALID = VALID + snow_idx + land_idx;
-                                             
-                    elseif var == 2 % == 2, only increment SH counts
+                        if SH_exist == 1
+                            %set all values below equator to 0
+                            snow_idx(SH_rows(1):SH_rows(2),:) = 0;
+                            land_idx(SH_rows(1):SH_rows(2),:) = 0;
+                        else
+                            SCD = SCD + snow_idx;
+                            VALID = VALID + snow_idx + land_idx;
+                        end
 
-                        %set all values above equator to 0
-                        snow_idx(NH_rows(1):NH_rows(2),:) = 0;
-                        land_idx(NH_rows(1):NH_rows(2),:) = 0;
-                        SCD = SCD + snow_idx;
-                        VALID = VALID + snow_idx + land_idx;
+                    elseif (var == 2) && (SH_exist == 1) % == 2, only increment SH counts
+
+                        if NH_exist == 1
+                            %set all values above equator to 0
+                            snow_idx(NH_rows(1):NH_rows(2),:) = 0;
+                            land_idx(NH_rows(1):NH_rows(2),:) = 0;
+                        else
+                            SCD = SCD + snow_idx;
+                            VALID = VALID + snow_idx + land_idx;
+                        end
                         
                     elseif var == 3 % == 3, increment both
 
                         %increment all locations
                         SCD = SCD + snow_idx;
                         VALID = VALID + snow_idx + land_idx;
-                        
+                    
+                    else    
+                        continue;    
                     end
                        
                 end
 
+            disp(file_ii);
             toc
+            
             end
             
         else

@@ -53,7 +53,7 @@ dt = NaT(size(files));
 for i = 1:length(dt)
     file = files(i).name;
     f = split(file,'_');
-    dt(i) = datetime(str2double(f{4}),str2double(f{5}),str2double(f{6}));
+    dt(i) = datetime(str2double(f{end-3}),str2double(f{end-2}),str2double(f{end-1}));
 end
 
 %ensure files are sorted in chronological order
@@ -94,7 +94,7 @@ if isa(date_range,"double") && date_range == 1 %use the hemisphere specific snow
                 tic
 
                 %load in file data and georeferencing information
-                file_ii = files_i(ii).name; disp(file_ii);
+                file_ii = files_i(ii).name;
                 var = file_idx(ii);
                 [D,R] = readgeoraster([path file_ii]);
 
@@ -108,6 +108,18 @@ if isa(date_range,"double") && date_range == 1 %use the hemisphere specific snow
                     NH_rows = [find(NH_rows,1,'first') find(NH_rows,1,'last')];
                     SH_rows = (lats <= 0);
                     SH_rows = [find(SH_rows,1,'first') find(SH_rows,1,'last') - 1];
+
+                    %check if there is data in the Northern Hemisphere
+                    NH_exist = 1;
+                    if isempty(NH_rows)
+                        NH_exist = 0;
+                    end
+
+                    %check if there is data in the Southern Hemisphere
+                    SH_exist = 1;
+                    if isempty(SH_rows)
+                        SH_exist = 0;
+                    end
                     
                     %stores the iteration of the first occurance of snow cover
                     first_SCA = zeros([size(D,1) size(D,2)],'int16');
@@ -121,7 +133,7 @@ if isa(date_range,"double") && date_range == 1 %use the hemisphere specific snow
                     mask = ~(snow_idx | land_idx);
 
                     %check file_idx to determine which values to update
-                    if var == 1 % == 1, only increment NH counts
+                    if (var == 1 && NH_exist == 1) % == 1, only increment NH counts
 
                         %only update NH values (trim to NH before assigning number)
                         first_SCA_i = first_SCA(NH_rows(1):NH_rows(2),:); %extract only the NH from the matrix storing first snow occurances
@@ -134,7 +146,7 @@ if isa(date_range,"double") && date_range == 1 %use the hemisphere specific snow
                         last_SCA_i(snow_idx) = ii; %update the locations with the new number representing the timestep with first snow occurance
                         last_SCA(NH_rows(1):NH_rows(2),:) = last_SCA_i; %apply these back to the original/global data
                                 
-                    elseif var == 2 % == 2, only update SH counts
+                    elseif (var == 2 && SH_exist) % == 2, only update SH counts
 
                         %only update SH values (trim to NH before assigning number)
                         first_SCA_i = first_SCA(SH_rows(1):SH_rows(2),:); %extract only the NH from the matrix storing first snow occurances
@@ -155,7 +167,9 @@ if isa(date_range,"double") && date_range == 1 %use the hemisphere specific snow
 
                         %keep running count of most recent snow cover period
                         last_SCA(snow_idx) = ii;
-                        
+
+                    else %if no conditions are met
+                        continue  
                     end
               
                 %increment counts
@@ -163,11 +177,10 @@ if isa(date_range,"double") && date_range == 1 %use the hemisphere specific snow
 
                     %identify locations with snow cover
                     snow_idx = (D == valid_snow);
-                    first_SCA_idx = (snow_idx & first_SCA == 0);
-                    
+                    first_SCA_idx = (snow_idx & first_SCA == 0);          
                     
                     %check file_idx to determine which values to increment
-                    if var == 1 % == 1, only increment NH counts
+                    if (var == 1 && NH_exist == 1) % == 1, only increment NH counts
 
                         %only update NH values (trim to NH before assigning number)
                         first_SCA_i = first_SCA(NH_rows(1):NH_rows(2),:); %extract only the NH from the matrix storing first snow occurances
@@ -178,10 +191,9 @@ if isa(date_range,"double") && date_range == 1 %use the hemisphere specific snow
                         last_SCA_i = last_SCA(NH_rows(1):NH_rows(2),:); %extract only the NH from the matrix storing first snow occurances
                         snow_idx = snow_idx(NH_rows(1):NH_rows(2),:); %extract only the NH from the matrix storing the locations of places with their first snow cover
                         last_SCA_i(snow_idx) = ii; %update the locations with the new number representing the timestep with first snow occurance
-                        last_SCA(NH_rows(1):NH_rows(2),:) = last_SCA_i; %apply these back to the original/global data
-                         
+                        last_SCA(NH_rows(1):NH_rows(2),:) = last_SCA_i; %apply these back to the original/global data         
                                                
-                    elseif var == 2 % == 2, only increment SH counts
+                    elseif (var == 2 && SH_exist) % == 2, only increment SH counts
 
                         %only update SH values (trim to NH before assigning number)
                         first_SCA_i = first_SCA(SH_rows(1):SH_rows(2),:); %extract only the NH from the matrix storing first snow occurances
@@ -202,10 +214,13 @@ if isa(date_range,"double") && date_range == 1 %use the hemisphere specific snow
                         %keep running count of most recent snow cover period
                         last_SCA(snow_idx) = ii;
                         
+                    else %if no conditions are met
+                        continue
                     end
                        
                 end
 
+                disp(file_ii);
                 toc
 
             end

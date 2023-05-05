@@ -53,7 +53,7 @@ dt = NaT(size(files));
 for i = 1:length(dt)
     file = files(i).name;
     f = split(file,'_');
-    dt(i) = datetime(str2double(f{4}),str2double(f{5}),str2double(f{6}));
+    dt(i) = datetime(str2double(f{end-3}),str2double(f{end-2}),str2double(f{end-1}));
 end
 
 %ensure files are sorted in chronological order
@@ -94,7 +94,7 @@ if isa(date_range,"double") && date_range == 1 %use the hemisphere specific snow
                 tic
 
                 %load in file data and georeferencing information
-                file_ii = files_i(ii).name; disp(file_ii);
+                file_ii = files_i(ii).name;
                 var = file_idx(ii);
                 [D,R] = readgeoraster([path file_ii]);
 
@@ -108,6 +108,18 @@ if isa(date_range,"double") && date_range == 1 %use the hemisphere specific snow
                     NH_rows = [find(NH_rows,1,'first') find(NH_rows,1,'last')];
                     SH_rows = (lats <= 0);
                     SH_rows = [find(SH_rows,1,'first') find(SH_rows,1,'last') - 1];
+
+                    %check if there is data in the Northern Hemisphere
+                    NH_exist = 1;
+                    if isempty(NH_rows)
+                        NH_exist = 0;
+                    end
+
+                    %check if there is data in the Southern Hemisphere
+                    SH_exist = 1;
+                    if isempty(SH_rows)
+                        SH_exist = 0;
+                    end
                     
                     %stores number of snow on off cycles
                     Ncyc = zeros([size(D,1) size(D,2)],'uint8');
@@ -131,18 +143,22 @@ if isa(date_range,"double") && date_range == 1 %use the hemisphere specific snow
                     SCA_prev = (D == valid_snow);
 
                     %check file_idx to determine which values to increment
-                    if var == 1 % == 1, only increment NH counts
+                    if (var == 1) && (NH_exist == 1) % == 1, only increment NH counts
 
-                        %set all values below equator to 0
-                        snow_on_off(SH_rows(1):SH_rows(2),:) = 0;
+                        if SH_exist == 1
+                            %set all values below equator to 0
+                            snow_on_off(SH_rows(1):SH_rows(2),:) = 0;
+                        end
 
                         %keep running sum of cycles, only increment NH
                         Ncyc = Ncyc + uint8(snow_on_off);
                                                
-                    elseif var == 2 % == 2, only increment SH counts
+                    elseif (var == 2) && (SH_exist == 1) % == 2, only increment SH counts
 
-                        %set all values above equator to 0
-                        snow_on_off(NH_rows(1):NH_rows(2),:) = 0;
+                        if NH_exist == 1
+                            %set all values above equator to 0
+                            snow_on_off(NH_rows(1):NH_rows(2),:) = 0;
+                        end
 
                         %keep running sum of cycles, only increment SH
                         Ncyc = Ncyc + uint8(snow_on_off);
@@ -151,12 +167,16 @@ if isa(date_range,"double") && date_range == 1 %use the hemisphere specific snow
 
                         %increment all locations
                         Ncyc = Ncyc + uint8(snow_on_off);
-                        
+
+                    else %if none of the conditions are met, skip to next iteration
+                        continue
                     end
                        
                 end
 
+            disp(file_ii);
             toc
+            
             end
             
         else

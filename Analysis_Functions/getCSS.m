@@ -55,7 +55,7 @@ dt = NaT(size(files));
 for i = 1:length(dt)
     file = files(i).name;
     f = split(file,'_');
-    dt(i) = datetime(str2double(f{4}),str2double(f{5}),str2double(f{6}));
+    dt(i) = datetime(str2double(f{end-3}),str2double(f{end-2}),str2double(f{end-1}));
 end
 
 %ensure files are sorted in chronological order
@@ -99,7 +99,7 @@ if isa(date_range,"double") && date_range == 1 %use the hemisphere specific snow
                 tic
 
                 %load in file data and georeferencing information
-                file_ii = files_i(ii).name; disp(file_ii);
+                file_ii = files_i(ii).name;
                 var = file_idx(ii);
                 [D,R] = readgeoraster([path file_ii]);
 
@@ -116,6 +116,18 @@ if isa(date_range,"double") && date_range == 1 %use the hemisphere specific snow
                     NH_rows = [find(NH_rows,1,'first') find(NH_rows,1,'last')];
                     SH_rows = (lats <= 0);
                     SH_rows = [find(SH_rows,1,'first') find(SH_rows,1,'last') - 1];
+
+                    %check if there is data in the Northern Hemisphere
+                    NH_exist = 1;
+                    if isempty(NH_rows)
+                        NH_exist = 0;
+                    end
+
+                    %check if there is data in the Southern Hemisphere
+                    SH_exist = 1;
+                    if isempty(SH_rows)
+                        SH_exist = 0;
+                    end
                     
                     %to keep track of consecutive snow lengths
                     SLcount = zeros(size(D),'int16');
@@ -133,7 +145,7 @@ if isa(date_range,"double") && date_range == 1 %use the hemisphere specific snow
                     mask = ~(snow_idx | D == valid_land);
 
                     %check file_idx to determine which values to update
-                    if var == 1 % == 1, only increment NH counts
+                    if (var == 1) && (NH_exist == 1) % == 1, only increment NH counts
 
                         %only update NH values
 
@@ -146,12 +158,14 @@ if isa(date_range,"double") && date_range == 1 %use the hemisphere specific snow
 
                         %set snow to no snow index to false in the southern
                         %hemisphere
-                        idxSnow2NoSnow(SH_rows(1):SH_rows(2),:) = false;
+                        if SH_exist == 1
+                            idxSnow2NoSnow(SH_rows(1):SH_rows(2),:) = false;
+                        end
 
                         %check if the counts are greater than the current max run, but only
                         % in locations that are at the end of a snow on period
-                        if i == last_NH %special case if CSS runs through end of the time series
-                            idx = ((SLcount > CSS) & idxSnow2NoSnow) | ((SLcount > CSS) & D == 1);
+                        if ii == last_NH %special case if CSS runs through end of the time series
+                            idx = ((SLcount > CSS) & idxSnow2NoSnow) | ((SLcount > CSS) & D == valid_snow);
                         else %all other cases, update when changing from snow to no snow if new SLcount is longer than existing longest snow on period
                             idx = (SLcount > CSS) & idxSnow2NoSnow;
                         end
@@ -160,7 +174,7 @@ if isa(date_range,"double") && date_range == 1 %use the hemisphere specific snow
                         %reset counter at all locations that switched back to no snow
                         SLcount(idxSnow2NoSnow) = 0;
                              
-                    elseif var == 2 % == 2, only update SH counts
+                    elseif (var == 2) && (SH_exist == 1) % == 2, only update SH counts
 
                         %only update SH values
 
@@ -173,12 +187,14 @@ if isa(date_range,"double") && date_range == 1 %use the hemisphere specific snow
 
                         %set snow to no snow index to false in the southern
                         %hemisphere
-                        idxSnow2NoSnow(NH_rows(1):NH_rows(2),:) = false;
+                        if NH_exist == 1
+                            idxSnow2NoSnow(NH_rows(1):NH_rows(2),:) = false;
+                        end
 
                         %check if the counts are greater than the current max run, but only
                         % in locations that are at the end of a snow on period
-                        if i == last_SH %special case if CSS runs through end of the time series
-                            idx = ((SLcount > CSS) & idxSnow2NoSnow) | ((SLcount > CSS) & D == 1);
+                        if ii == last_SH %special case if CSS runs through end of the time series
+                            idx = ((SLcount > CSS) & idxSnow2NoSnow) | ((SLcount > CSS) & D == valid_snow);
                         else %all other cases, update when changing from snow to no snow if new SLcount is longer than existing longest snow on period
                             idx = (SLcount > CSS) & idxSnow2NoSnow;
                         end
@@ -194,8 +210,8 @@ if isa(date_range,"double") && date_range == 1 %use the hemisphere specific snow
                         SLcount(SLcount_idx) = SLcount(SLcount_idx) + 1;
                         %check if the counts are greater than the current max run, but only
                         % in locations that are at the end of a snow on period
-                        if (i == last_NH || i == last_SH) %special case if CSS runs through end of the time series
-                            idx = ((SLcount > CSS) & idxSnow2NoSnow) | ((SLcount > CSS) & D == 1);
+                        if (ii == last_NH || ii == last_SH) %special case if CSS runs through end of the time series
+                            idx = ((SLcount > CSS) & idxSnow2NoSnow) | ((SLcount > CSS) & D == valid_snow);
                         else %all other cases, update when changing from snow to no snow if new SLcount is longer than existing longest snow on period
                             idx = (SLcount > CSS) & idxSnow2NoSnow;
                         end
@@ -203,7 +219,9 @@ if isa(date_range,"double") && date_range == 1 %use the hemisphere specific snow
                         CSS(idx) = SLcount(idx);
                         %reset counter at all locations that switched back to no snow
                         SLcount(idxSnow2NoSnow) = 0;
-                                            
+                    
+                    else %if no conditions are met
+                        continue
                     end
               
                 %increment counts
@@ -224,7 +242,7 @@ if isa(date_range,"double") && date_range == 1 %use the hemisphere specific snow
                     SCA_prev = D;           
                     
                     %check file_idx to determine which values to increment
-                    if var == 1 % == 1, only increment NH counts
+                    if (var == 1) && (NH_exist == 1) % == 1, only increment NH counts
 
                         %only update NH values
 
@@ -237,12 +255,14 @@ if isa(date_range,"double") && date_range == 1 %use the hemisphere specific snow
 
                         %set snow to no snow index to false in the southern
                         %hemisphere
-                        idxSnow2NoSnow(SH_rows(1):SH_rows(2),:) = false;
+                        if SH_exist == 1
+                            idxSnow2NoSnow(SH_rows(1):SH_rows(2),:) = false;
+                        end
 
                         %check if the counts are greater than the current max run, but only
                         % in locations that are at the end of a snow on period
-                        if i == last_NH %special case if CSS runs through end of the time series
-                            idx = ((SLcount > CSS) & idxSnow2NoSnow) | ((SLcount > CSS) & D == 1);
+                        if ii == last_NH %special case if CSS runs through end of the time series
+                            idx = ((SLcount > CSS) & idxSnow2NoSnow) | ((SLcount > CSS) & D == valid_snow);
                         else %all other cases, update when changing from snow to no snow if new SLcount is longer than existing longest snow on period
                             idx = (SLcount > CSS) & idxSnow2NoSnow;
                         end
@@ -252,7 +272,7 @@ if isa(date_range,"double") && date_range == 1 %use the hemisphere specific snow
                         SLcount(idxSnow2NoSnow) = 0;
 
                                                
-                    elseif var == 2 % == 2, only increment SH counts
+                    elseif (var == 2) && (SH_exist == 1) % == 2, only increment SH counts
 
                         %only update SH values
 
@@ -265,12 +285,14 @@ if isa(date_range,"double") && date_range == 1 %use the hemisphere specific snow
 
                         %set snow to no snow index to false in the northern               
                         %hemisphere
-                        idxSnow2NoSnow(NH_rows(1):NH_rows(2),:) = false;
+                        if NH_exist == 1
+                            idxSnow2NoSnow(NH_rows(1):NH_rows(2),:) = false;
+                        end
 
                         %check if the counts are greater than the current max run, but only
                         % in locations that are at the end of a snow on period
-                        if i == last_SH %special case if CSS runs through end of the time series
-                            idx = ((SLcount > CSS) & idxSnow2NoSnow) | ((SLcount > CSS) & D == 1);
+                        if ii == last_SH %special case if CSS runs through end of the time series
+                            idx = ((SLcount > CSS) & idxSnow2NoSnow) | ((SLcount > CSS) & D == valid_snow);
                         else %all other cases, update when changing from snow to no snow if new SLcount is longer than existing longest snow on period
                             idx = (SLcount > CSS) & idxSnow2NoSnow;
                         end
@@ -286,8 +308,8 @@ if isa(date_range,"double") && date_range == 1 %use the hemisphere specific snow
                         SLcount(SLcount_idx) = SLcount(SLcount_idx) + 1;
                         %check if the counts are greater than the current max run, but only
                         % in locations that are at the end of a snow on period
-                        if (i == last_NH || i == last_SH) %special case if CSS runs through end of the time series
-                            idx = ((SLcount > CSS) & idxSnow2NoSnow) | ((SLcount > CSS) & D == 1);
+                        if (ii == last_NH || ii == last_SH) %special case if CSS runs through end of the time series
+                            idx = ((SLcount > CSS) & idxSnow2NoSnow) | ((SLcount > CSS) & D == valid_snow);
                         else %all other cases, update when changing from snow to no snow if new SLcount is longer than existing longest snow on period
                             idx = (SLcount > CSS) & idxSnow2NoSnow;
                         end
@@ -295,11 +317,14 @@ if isa(date_range,"double") && date_range == 1 %use the hemisphere specific snow
                         CSS(idx) = SLcount(idx);
                         %reset counter at all locations that switched back to no snow
                         SLcount(idxSnow2NoSnow) = 0;
-                   
+                    
+                    else %if no conditions are met
+                        continue
                     end
                        
                 end
 
+                disp(file_ii);
                 toc
 
             end
@@ -370,9 +395,9 @@ elseif isa(date_range,"double") && date_range == 2 %use the calendar year
                 else
 
                     %identify locations going from snow to no snow
-                    idxSnow2NoSnow = (SCA_prev == 1) & (D == 0);
+                    idxSnow2NoSnow = (SCA_prev == valid_snow) & (D == valid_land);
                     %identify locations going from no snow to snow
-                    idxNoSnow2Snow = (SCA_prev == 0) & (snow_idx);
+                    idxNoSnow2Snow = (SCA_prev == valid_land) & (snow_idx);
 
                     %start counting at a location just switching from no snow
                     %to snow (includes prior iterations that switched) and stop
@@ -390,8 +415,8 @@ elseif isa(date_range,"double") && date_range == 2 %use the calendar year
                 SLcount(SLcount_idx) = SLcount(SLcount_idx) + 1;
                 %check if the counts are greater than the current max run, but only
                 % in locations that are at the end of a snow on period
-                if i == length(files_i) %special case if CSS runs through end of the time series
-                    idx = ((SLcount > CSS) & idxSnow2NoSnow) | ((SLcount > CSS) & D == 1);
+                if ii == length(files_i) %special case if CSS runs through end of the time series
+                    idx = ((SLcount > CSS) & idxSnow2NoSnow) | ((SLcount > CSS) & D == valid_snow);
                 else %all other cases, update when changing from snow to no snow if new SLcount is longer than existing longest snow on period
                     idx = (SLcount > CSS) & idxSnow2NoSnow;
                 end
@@ -483,7 +508,7 @@ elseif isa(date_range,'datetime') %uses the specified date range
             %check if the counts are greater than the current max run, but only
             % in locations that are at the end of a snow on period
             if i == length(files_i) %special case if SLmax runs through end of the time series
-                idx = ((SLcount > CSS) & idxSnow2NoSnow) | ((SLcount > CSS) & D == 1);
+                idx = ((SLcount > CSS) & idxSnow2NoSnow) | ((SLcount > CSS) & D == valid_snow);
             else %all other cases, update when changing from snow to no snow if new SLcount is longer than existing longest snow on period
                 idx = (SLcount > CSS) & idxSnow2NoSnow;
             end
