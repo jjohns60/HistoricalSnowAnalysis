@@ -5,6 +5,13 @@ A companion paper 'Global Snow Seasonality Regimes from Satellite Records of Sno
 
 ![alt text](https://github.com/jjohns60/HistoricalSnowAnalysis/blob/main/SCAheader_image.jpg?raw=true)
 
+## Installation
+
+* Each folder provides self contained functions and usage examples
+* Just clone this repository (or sub-folder) to your local MATLAB working directory
+* Ensure functions are added to your local path before using, see 'addpath()'
+
+
 ## Folders & Files
 
 * `Regrid_Global_SCA`
