@@ -4,7 +4,7 @@ function FSS = getFSS(path,savepath,date_range,valid_snow,valid_land,min_count)
 % snow cover data. Currently, works for Tiff/GeoTiff files.
 %
 % INPUTS:
-% path - path to folder containing binary snow cover files
+% path - path to folder containing snow cover .tif files
 % savepath - location to store output data
 % date_range - specify 1 for snow year (default), 2 for calendar year, or 
 %   input a datetime array in the format: [start_date end_date]
@@ -25,7 +25,9 @@ function FSS = getFSS(path,savepath,date_range,valid_snow,valid_land,min_count)
 %   assigned as the no data value
 %
 % Note: the larger the dataset, the slower processing (e.g., takes ~60 
-% minutes to process a single global snow year at ~1km)
+% minutes to process a single global snow year at ~1km). Snow years are
+% defined hemisphere specific and begin at approximately the date of
+% minimum snow cover in each hemishphere (August 1 - NH, March 1 - SH)
 
 
 %error handling
@@ -53,7 +55,7 @@ dt = NaT(size(files));
 for i = 1:length(dt)
     file = files(i).name;
     f = split(file,'_');
-    dt(i) = datetime(str2double(f{end-3}),str2double(f{end-2}),str2double(f{end-1}));
+    dt(i) = datetime(str2double(f{end-5}),str2double(f{end-4}),str2double(f{end-3}));
 end
 
 %ensure files are sorted in chronological order

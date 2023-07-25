@@ -198,8 +198,7 @@ for i = 1:length(DATES)
     %determine target date
     date = DATES(i);
     disp(date)
-    
-    
+
     %Download relevant datafiles from NSIDC
     try
         NSIDC_HTTPS_ACCESS(HTTPS_PATH,username,password,wget_path,date,{dataset_id FILE_EXT tiles{:}},out_path);

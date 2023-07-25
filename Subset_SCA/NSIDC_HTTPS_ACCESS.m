@@ -15,18 +15,24 @@ function NSIDC_HTTPS_ACCESS(HTTPS_PATH,username,password,wget_path,date,str_arra
 %   savepath - location of which to save the downloaded files locally
 
 
+
 %set permissions by updating options and headerfields (websave method only)
 options = weboptions('HeaderFields',{'Authorization',...
     ['Basic ' matlab.net.base64encode([username ':' password])]});
 %options = weboptions;
 %options.Username = username;
 %options.Password = password;
-%options.Timeout = 15;
+options.Timeout = 5;
+options.UserAgent = 'Mozilla/5.0'; %simulates requests coming from web browser
+options.ContentType = 'text';
 
 %Get list of all filenames meeting conditions (1st two string arguments are
 %required)
 date_str = datestr(date,'yyyy.mm.dd');
+%% THIS LINE HANGS IF SCRIPT MAKES TOO MANY REQUESTS QUICKLY
+disp('1a')
 html_text = webread([HTTPS_PATH date_str],options);
+disp('1b')
 links = regexp(html_text,[str_array{1} '.\w*.\w*.\w*.\w*.' str_array{2}],'match');
 links = unique(links);
 
@@ -46,8 +52,17 @@ existing_files = dir(savepath);
 existing_files = {existing_files.name};
 L = length(links);
 
+%{
+%initiate parallel computing pool (if not already)
+poolobj = gcp('nocreate'); % If no pool, do not create new one.
+if isempty(poolobj)
+    parpool(4);
+end
+%}
+
 %loop through with parallelization to speed up processing
-parfor i = 1:L
+%parfor i = 1:L
+for i = 1:L
 
     %keep track of iteration and get individual file name
     file = links{i};

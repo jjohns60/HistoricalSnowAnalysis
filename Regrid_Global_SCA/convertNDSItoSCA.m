@@ -16,6 +16,11 @@ function [SCA,t] = convertNDSItoSCA(filepath,savepath,method,datapath)
 %            for method 6, this must include the path on your local machine
 %            to MODIS NDVI data (MOD13C2_v061)
 %
+%
+% OUTPUTS
+% SCA - the binarized snow (1) vs. no snow (2) [255 = fill/no data] map
+% t - the corresponding date to SCA
+%
 % Note: The literature supporting each of these approaches is included
 % within each relevant section of this script. Areas with no data are
 % returned using the fill value of 255 in the 8-bit GeoTiffs
