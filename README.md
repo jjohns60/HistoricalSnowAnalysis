@@ -1,7 +1,7 @@
 # Historical Snow Analysis
 
 This repository contains MATLAB codes for downloading, regridding, and analyzing global snow regimes using snow cover datasets. These scripts have been developed by Jeremy Johnston (jeremy.johnston[at]unh.edu) at the University of New Hampshire Earth Systems Research Center (ESRC). Please reach out to Jeremy with questions on usage or troubleshooting.
-A companion paper 'Global Snow Seasonality Regimes from Satellite Records of Snow Cover' has been published as an early release at https://doi.org/10.1175/JHM-D-23-0047.1
+A companion paper 'Global Snow Seasonality Regimes from Satellite Records of Snow Cover' has been published and is available at https://doi.org/10.1175/JHM-D-23-0047.1
 
 ![alt text](https://github.com/jjohns60/HistoricalSnowAnalysis/blob/main/SCAheader_image.jpg?raw=true)
 
