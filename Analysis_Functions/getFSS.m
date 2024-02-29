@@ -65,7 +65,7 @@ files = files(I);
 %check for the date_range input type and build index specifying file ranges
 %to count snow cover durations
 if isa(date_range,"double") && date_range == 1 %use the hemisphere specific snow year and re-combine
-    %NH: Aug 1, Y -> Sep 30, Y + 1
+    %NH: Aug 1, Y -> July 31, Y + 1
     %SH: Mar 1, Y -> Feb 28/29, Y + 1
     
     % identify each snow year within the dt list
